@@ -85,7 +85,7 @@ model Evolution {
   toPokemon       Pokemon  @relation("EvolutionTo", fields: [toId], references: [id])
   toId            Int
 
-  method          String?   // e.g. "use a Thunder Stone", "level 16", etc.
+  method          String?  
   evolutionPhotoUrl String?
   
   createdAt       DateTime  @default(now())

@@ -1,0 +1,237 @@
+import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { useQueryState } from 'nuqs'
+import { PokemonForm } from '~/components/PokemonForm'
+import { Button, Label } from '~/components/ui'
+import { getOne } from '~/lib/pokemon-queries'
+
+export default function PokemonPage() {
+  const router = useRouter()
+  const { id } = router.query
+  const pokemonId = typeof id === 'string' ? Number.parseInt(id, 10) : null
+
+  const [isEditing, setIsEditing] = useQueryState('edit', {
+    defaultValue: false,
+    parse: (value) => value === 'true',
+    serialize: (value) => (value ? 'true' : ''),
+  })
+
+  const { data: pokemon, error } = getOne(pokemonId)
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-red-400 text-xl">
+          Error loading Pokemon: {error.message}
+        </div>
+      </div>
+    )
+  }
+
+  if (isEditing) {
+    return (
+      <PokemonForm
+        pokemon={pokemon}
+        mode="edit"
+        onBack={() => setIsEditing(false)}
+      />
+    )
+  }
+
+  if (!pokemon) {
+    return null
+  }
+
+  return (
+    <div className="mx-auto max-w-6xl rounded-lg bg-black/70 p-8">
+      <div className=" flex items-center justify-between">
+        <Link
+          href="/pokedex"
+          className="flex items-center gap-2 rounded-md p-2 text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-gray-900"
+          aria-label="Back to Pokedex"
+        >
+          <ArrowLeft className="h-8 w-8" />
+        </Link>
+
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => setIsEditing(true)}
+          >
+            <Pencil className="h-4 w-4" />
+            Edit
+          </Button>
+          <Button size="sm" className="flex items-center gap-2 ">
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-12 py-2 lg:grid-cols-2">
+        <div className="flex items-center justify-center">
+          <Image
+            src={pokemon.photoUrl || '/Pikachu.png'}
+            alt={pokemon.name}
+            width={476}
+            height={447}
+            className="object-contain"
+          />
+        </div>
+
+        <div className="space-y-4 rounded-lg bg-gray-800/60 p-4 text-white">
+          <div>
+            <div className="flex justify-between">
+              <h1 className="font-semibold text-4xl text-white">
+                {pokemon.name}
+              </h1>
+              <p className="text-lg">N° {pokemon.pokedexNumber}</p>
+            </div>
+
+            <span className="text-primary">
+              {pokemon.types.map((pokemonType, index) => (
+                <p key={index}>{pokemonType.type.name}</p>
+              ))}
+            </span>
+          </div>
+          <p className="text-white leading-relaxed">
+            {pokemon.description || 'No description available.'}
+          </p>
+
+          <div className="grid grid-cols-3 gap-6 text-sm">
+            <div>
+              <Label>Height</Label>
+              <p>
+                {pokemon.heightCm
+                  ? `${Math.floor(pokemon.heightCm / 30.48)}' ${Math.round(
+                      (pokemon.heightCm % 30.48) / 2.54
+                    )
+                      .toString()
+                      .padStart(2, '0')}"`
+                  : 'Unknown'}
+              </p>
+            </div>
+            <div>
+              <Label>Weight</Label>
+              <p>
+                {pokemon.weightKg
+                  ? `${(pokemon.weightKg * 2.205).toFixed(1)} lbs`
+                  : 'Unknown'}
+              </p>
+            </div>
+            <div>
+              <Label>Gender Ratio</Label>
+              <p>
+                {pokemon.genderMaleRatio
+                  ? `${(pokemon.genderMaleRatio * 100).toFixed(1)}%`
+                  : '0%'}{' '}
+                /{' '}
+                {pokemon.genderFemaleRatio
+                  ? `${(pokemon.genderFemaleRatio * 100).toFixed(1)}%`
+                  : '0%'}
+              </p>
+            </div>
+            <div>
+              <Label>Abilities</Label>
+              <p>
+                {pokemon.abilities?.map((a) => a.ability.name).join(', ') ||
+                  'Unknown'}
+              </p>
+            </div>
+            <div>
+              <Label>Egg Groups</Label>
+              <p>
+                {pokemon.eggGroups?.map((g) => g.eggGroup.name).join(', ') ||
+                  'Unknown'}
+              </p>
+            </div>
+          </div>
+
+          {(pokemon.evolutionsFrom.length > 0 ||
+            pokemon.evolutionsTo.length > 0) && (
+            <div className="space-y-4">
+              <Label>Evolutions</Label>
+
+              {pokemon.evolutionsFrom.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-gray-300 text-sm">
+                    {pokemon.evolutionsFrom[0]?.method}
+                  </p>
+
+                  <div className="flex items-center gap-4">
+                    <Link
+                      href={`/pokemon/${pokemon.evolutionsFrom[0]?.fromPokemon.id}`}
+                      className="transition-opacity hover:opacity-80"
+                    >
+                      <Image
+                        src={
+                          pokemon.evolutionsFrom[0]?.fromPokemon.photoUrl ||
+                          '/Pikachu.png'
+                        }
+                        alt={
+                          pokemon.evolutionsFrom[0]?.fromPokemon.name ||
+                          'Previous evolution'
+                        }
+                        width={80}
+                        height={80}
+                        className="object-contain"
+                      />
+                    </Link>
+                    <p className="text-2xl text-white">→</p>
+                    <Image
+                      src={pokemon.photoUrl || '/Pikachu.png'}
+                      alt={pokemon.name}
+                      width={80}
+                      height={80}
+                      className="object-contain"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {pokemon.evolutionsTo.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-gray-300 text-sm">
+                    {pokemon.evolutionsTo[0]?.method}
+                  </p>
+
+                  <div className="flex items-center gap-4">
+                    <Image
+                      src={pokemon.photoUrl || '/Pikachu.png'}
+                      alt={pokemon.name}
+                      width={80}
+                      height={80}
+                      className="object-contain"
+                    />
+                    <p className="text-2xl text-white">→</p>
+                    <Link
+                      href={`/pokemon/${pokemon.evolutionsTo[0]?.toPokemon.id}`}
+                      className="transition-opacity hover:opacity-80"
+                    >
+                      <Image
+                        src={
+                          pokemon.evolutionsTo[0]?.toPokemon.photoUrl ||
+                          '/Pikachu.png'
+                        }
+                        alt={
+                          pokemon.evolutionsTo[0]?.toPokemon.name ||
+                          'Evolution Pokemon'
+                        }
+                        width={80}
+                        height={80}
+                        className="object-contain"
+                      />
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -1,28 +1,20 @@
 import type { Pokemon } from '@prisma/client'
 import Image from 'next/image'
-import { Button } from '~/components/ui'
+import Link from 'next/link'
 
 interface PokemonCardProps {
   pokemon: Pokemon & {
     types: Array<{ type: { name: string } }>
   }
-  onClick?: () => void
 }
 
-export default function PokemonCard({ pokemon, onClick }: PokemonCardProps) {
+export default function PokemonCard({ pokemon }: PokemonCardProps) {
   const types = pokemon.types.map((pokemonType) => pokemonType.type.name)
 
   return (
-    <Button
-      variant="ghost"
-      className="group h-[271px] w-[276px] cursor-pointer flex-col gap-[30px] rounded-[16px] bg-gray-800/80 px-[39px] py-[19px] shadow-lg transition-all hover:scale-105 hover:bg-gray-700/80 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-gray-900"
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onClick?.()
-        }
-      }}
+    <Link
+      href={`/pokemon/${pokemon.id}`}
+      className="group flex h-[271px] w-[276px] cursor-pointer flex-col items-center justify-center gap-[30px] rounded-[16px] bg-gray-800/80 px-[39px] py-[19px] shadow-lg transition-all hover:scale-105 hover:bg-gray-700/80 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-gray-900"
       aria-label={`View details for ${pokemon.name}, Pokémon number ${pokemon.pokedexNumber}`}
     >
       <Image
@@ -38,6 +30,6 @@ export default function PokemonCard({ pokemon, onClick }: PokemonCardProps) {
         <h3 className="font-bold text-lg text-white">{pokemon.name}</h3>
         <p className="text-primary capitalize">{types.join(', ')}</p>
       </div>
-    </Button>
+    </Link>
   )
 }

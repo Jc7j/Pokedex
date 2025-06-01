@@ -30,6 +30,28 @@ export default async function handler(
                 type: true,
               },
             },
+            abilities: {
+              include: {
+                ability: true,
+              },
+            },
+            eggGroups: {
+              include: {
+                eggGroup: true,
+              },
+            },
+            evolutionsFrom: {
+              include: {
+                fromPokemon: {
+                  select: {
+                    id: true,
+                    name: true,
+                    pokedexNumber: true,
+                    photoUrl: true,
+                  },
+                },
+              },
+            },
             evolutionsTo: {
               include: {
                 toPokemon: {

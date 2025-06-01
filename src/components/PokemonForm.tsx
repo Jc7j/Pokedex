@@ -1,12 +1,29 @@
 import type { Pokemon } from '@prisma/client'
 import { useForm } from '@tanstack/react-form'
+import Image from 'next/image'
+import { useState } from 'react'
 import { Button, Input, Label, Textarea } from '~/components/ui'
-import { useCreatePokemon, useUpdatePokemon } from '~/lib/queries'
+import { create, update } from '~/lib/pokemon-queries'
 import { tryCatch } from '~/lib/try-catch'
 
 interface PokemonFormProps {
   onBack: () => void
-  pokemon?: Pokemon | null
+  pokemon?:
+    | (Pokemon & {
+        types?: Array<{ type: { name: string } }>
+        abilities?: Array<{ ability: { name: string } }>
+        eggGroups?: Array<{ eggGroup: { name: string } }>
+        evolutionsTo?: Array<{
+          method: string | null
+          toPokemon: {
+            id: number
+            name: string
+            pokedexNumber: number
+            photoUrl: string | null
+          }
+        }>
+      })
+    | null
   mode?: 'create' | 'edit'
 }
 
@@ -32,9 +49,43 @@ export function PokemonForm({
   mode = 'create',
 }: PokemonFormProps) {
   const isEditMode = mode === 'edit' && !!pokemon
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [uploadingEvolution, setUploadingEvolution] = useState(false)
 
-  const createMutation = useCreatePokemon()
-  const updateMutation = useUpdatePokemon()
+  const createMutation = create()
+  const updateMutation = update()
+
+  // Helper function to upload file
+  const uploadFile = async (file: File): Promise<string | null> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        try {
+          const base64File = e.target?.result as string
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              file: base64File,
+              fileName: file.name,
+            }),
+          })
+
+          const result = await response.json()
+          if (result.success) {
+            resolve(result.url)
+          } else {
+            reject(new Error(result.error))
+          }
+        } catch (error) {
+          reject(error)
+        }
+      }
+      reader.readAsDataURL(file)
+    })
+  }
 
   const form = useForm({
     defaultValues: {
@@ -46,11 +97,12 @@ export function PokemonForm({
       weightKg: pokemon?.weightKg?.toString() ?? '',
       genderFemaleRatio: pokemon?.genderFemaleRatio?.toString() ?? '',
       genderMaleRatio: pokemon?.genderMaleRatio?.toString() ?? '',
-      types: [],
-      abilities: [],
-      eggGroups: [],
-      evolutionDescription: '',
-      evolutionPhotoUrl: null,
+      types: pokemon?.types?.map((t) => t.type.name) ?? [],
+      abilities: pokemon?.abilities?.map((a) => a.ability.name) ?? [],
+      eggGroups: pokemon?.eggGroups?.map((g) => g.eggGroup.name) ?? [],
+      evolutionDescription: pokemon?.evolutionsTo?.[0]?.method ?? '',
+      evolutionPhotoUrl:
+        pokemon?.evolutionsTo?.[0]?.toPokemon?.photoUrl ?? null,
     } as PokemonFormData,
     onSubmit: async ({ value }) => {
       const submitData = {
@@ -153,16 +205,64 @@ export function PokemonForm({
                   >
                     Pokemon Photo
                   </Label>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    id="pokemon-photo-input"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        setUploadingPhoto(true)
+                        try {
+                          const url = await uploadFile(file)
+                          if (url) {
+                            field.handleChange(url)
+                          }
+                        } catch (error) {
+                          console.error('Upload failed:', error)
+                        } finally {
+                          setUploadingPhoto(false)
+                        }
+                      }
+                    }}
+                    disabled={isLoading || uploadingPhoto}
+                  />
+
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="mb-2 border-gray-300 bg-gray-200 text-gray-800 hover:bg-gray-300"
-                    disabled={isLoading}
+                    className="mb-3 border-gray-300 bg-gray-200 text-gray-800 hover:bg-gray-300"
+                    disabled={isLoading || uploadingPhoto}
+                    onClick={() =>
+                      document.getElementById('pokemon-photo-input')?.click()
+                    }
                   >
-                    Select field
+                    {uploadingPhoto ? 'Uploading...' : 'Select field'}
                   </Button>
-                  <p className="text-gray-500 text-xs">No fields</p>
+
+                  {field.state.value && (
+                    <>
+                      <div className="mb-3 flex justify-center">
+                        <Image
+                          src={field.state.value}
+                          alt="Pokemon preview"
+                          width={100}
+                          height={100}
+                          className="rounded-lg object-contain"
+                        />
+                      </div>
+                      <p className="text-gray-400 text-xs">
+                        {field.state.value.split('/').pop() || 'pokemon.jpg'}
+                      </p>
+                    </>
+                  )}
+
+                  {!field.state.value && (
+                    <p className="text-gray-500 text-xs">No field selected</p>
+                  )}
                 </div>
               </div>
             )}
@@ -171,37 +271,41 @@ export function PokemonForm({
           {/* Type */}
           <form.Field name="types">
             {(field) => (
-              <Input
-                value={
-                  Array.isArray(field.state.value)
-                    ? field.state.value.join(', ')
-                    : ''
-                }
-                onChange={(e) => {
-                  const types = e.target.value
-                    .split(',')
-                    .map((t) => t.trim())
-                    .filter((t) => t !== '')
-                  field.handleChange(types)
-                }}
-                className="border-gray-600 bg-gray-800 text-white placeholder-gray-400"
-                placeholder="Type (e.g., grass, electric)"
-                disabled={isLoading}
-              />
+              <div>
+                <Input
+                  value={
+                    Array.isArray(field.state.value)
+                      ? field.state.value.join(', ')
+                      : ''
+                  }
+                  onChange={(e) => {
+                    const types = e.target.value
+                      .split(',')
+                      .map((t) => t.trim())
+                      .filter((t) => t !== '')
+                    field.handleChange(types)
+                  }}
+                  className="border-gray-600 bg-gray-800 text-white placeholder-gray-400"
+                  placeholder="Type"
+                  disabled={isLoading}
+                />
+              </div>
             )}
           </form.Field>
 
           {/* Description */}
           <form.Field name="description">
             {(field) => (
-              <Textarea
-                value={field.state.value || ''}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-                className="min-h-[60px] resize-none border-gray-600 bg-gray-800 text-white placeholder-gray-400"
-                placeholder="Description"
-                disabled={isLoading}
-              />
+              <div>
+                <Textarea
+                  value={field.state.value || ''}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  className="min-h-[60px] resize-none border-gray-600 bg-gray-800 text-white placeholder-gray-400"
+                  placeholder="Description"
+                  disabled={isLoading}
+                />
+              </div>
             )}
           </form.Field>
 
@@ -214,7 +318,7 @@ export function PokemonForm({
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   className="border-gray-600 bg-gray-800 text-white placeholder-gray-400"
-                  placeholder="Height (cm)"
+                  placeholder="Height"
                   disabled={isLoading}
                 />
               )}
@@ -227,7 +331,7 @@ export function PokemonForm({
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   className="border-gray-600 bg-gray-800 text-white placeholder-gray-400"
-                  placeholder="Weight (kg)"
+                  placeholder="Weight"
                   disabled={isLoading}
                 />
               )}
@@ -266,60 +370,66 @@ export function PokemonForm({
           {/* Abilities */}
           <form.Field name="abilities">
             {(field) => (
-              <Input
-                value={
-                  Array.isArray(field.state.value)
-                    ? field.state.value.join(', ')
-                    : ''
-                }
-                onChange={(e) => {
-                  const abilities = e.target.value
-                    .split(',')
-                    .map((a) => a.trim())
-                    .filter((a) => a !== '')
-                  field.handleChange(abilities)
-                }}
-                className="border-gray-600 bg-gray-800 text-white placeholder-gray-400"
-                placeholder="Abilities"
-                disabled={isLoading}
-              />
+              <div>
+                <Input
+                  value={
+                    Array.isArray(field.state.value)
+                      ? field.state.value.join(', ')
+                      : ''
+                  }
+                  onChange={(e) => {
+                    const abilities = e.target.value
+                      .split(',')
+                      .map((a) => a.trim())
+                      .filter((a) => a !== '')
+                    field.handleChange(abilities)
+                  }}
+                  className="border-gray-600 bg-gray-800 text-white placeholder-gray-400"
+                  placeholder="Abilities"
+                  disabled={isLoading}
+                />
+              </div>
             )}
           </form.Field>
 
           {/* Egg Groups */}
           <form.Field name="eggGroups">
             {(field) => (
-              <Input
-                value={
-                  Array.isArray(field.state.value)
-                    ? field.state.value.join(', ')
-                    : ''
-                }
-                onChange={(e) => {
-                  const eggGroups = e.target.value
-                    .split(',')
-                    .map((g) => g.trim())
-                    .filter((g) => g !== '')
-                  field.handleChange(eggGroups)
-                }}
-                className="border-gray-600 bg-gray-800 text-white placeholder-gray-400"
-                placeholder="Egg Groups"
-                disabled={isLoading}
-              />
+              <div>
+                <Input
+                  value={
+                    Array.isArray(field.state.value)
+                      ? field.state.value.join(', ')
+                      : ''
+                  }
+                  onChange={(e) => {
+                    const eggGroups = e.target.value
+                      .split(',')
+                      .map((g) => g.trim())
+                      .filter((g) => g !== '')
+                    field.handleChange(eggGroups)
+                  }}
+                  className="border-gray-600 bg-gray-800 text-white placeholder-gray-400"
+                  placeholder="Egg Groups"
+                  disabled={isLoading}
+                />
+              </div>
             )}
           </form.Field>
 
           {/* Evolution Description */}
           <form.Field name="evolutionDescription">
             {(field) => (
-              <Textarea
-                value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-                className="min-h-[60px] resize-none border-gray-600 bg-gray-800 text-white placeholder-gray-400"
-                placeholder="Evolution description"
-                disabled={isLoading}
-              />
+              <div>
+                <Textarea
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  className="min-h-[60px] resize-none border-gray-600 bg-gray-800 text-white placeholder-gray-400"
+                  placeholder="Evolution description"
+                  disabled={isLoading}
+                />
+              </div>
             )}
           </form.Field>
 
@@ -334,16 +444,64 @@ export function PokemonForm({
                   >
                     Evolution Photo
                   </Label>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    id="evolution-photo-input"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        setUploadingEvolution(true)
+                        try {
+                          const url = await uploadFile(file)
+                          if (url) {
+                            field.handleChange(url)
+                          }
+                        } catch (error) {
+                          console.error('Upload failed:', error)
+                        } finally {
+                          setUploadingEvolution(false)
+                        }
+                      }
+                    }}
+                    disabled={isLoading || uploadingEvolution}
+                  />
+
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="mb-2 border-gray-300 bg-gray-200 text-gray-800 hover:bg-gray-300"
-                    disabled={isLoading}
+                    className="mb-3 border-gray-300 bg-gray-200 text-gray-800 hover:bg-gray-300"
+                    disabled={isLoading || uploadingEvolution}
+                    onClick={() =>
+                      document.getElementById('evolution-photo-input')?.click()
+                    }
                   >
-                    Select field
+                    {uploadingEvolution ? 'Uploading...' : 'Select field'}
                   </Button>
-                  <p className="text-gray-500 text-xs">No fields</p>
+
+                  {field.state.value && (
+                    <>
+                      <div className="mb-3 flex justify-center">
+                        <Image
+                          src={field.state.value}
+                          alt="Evolution preview"
+                          width={100}
+                          height={100}
+                          className="rounded-lg object-contain"
+                        />
+                      </div>
+                      <p className="text-gray-400 text-xs">
+                        {field.state.value.split('/').pop() || 'evolution.jpg'}
+                      </p>
+                    </>
+                  )}
+
+                  {!field.state.value && (
+                    <p className="text-gray-500 text-xs">No field selected</p>
+                  )}
                 </div>
               </div>
             )}

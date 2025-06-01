@@ -1,9 +1,7 @@
-import type { Pokemon } from '@prisma/client'
 import { ListFilter, Plus, Search } from 'lucide-react'
 import { useQueryState } from 'nuqs'
 import { useState } from 'react'
 import PokemonCard from '~/components/PokemonCard'
-import { PokemonDetail } from '~/components/PokemonDetail'
 import { PokemonForm } from '~/components/PokemonForm'
 import {
   Button,
@@ -14,27 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui'
-import { usePokemon, usePokemonById } from '~/lib/queries'
-
-type PokemonWithRelations = Pokemon & {
-  types: Array<{ type: { name: string } }>
-  evolutionsTo: Array<{
-    toPokemon: {
-      id: number
-      name: string
-      pokedexNumber: number
-      photoUrl: string | null
-    }
-  }>
-}
+import { getMany } from '~/lib/pokemon-queries'
 
 export default function Pokedex() {
-  const [selectedPokemonId, setSelectedPokemonId] = useQueryState('pokemon', {
-    defaultValue: null,
-    parse: (value) => (value ? Number.parseInt(value, 10) : null),
-    serialize: (value) => value?.toString() ?? '',
-  })
-
   const [searchTerm, setSearchTerm] = useQueryState('search', {
     defaultValue: '',
     parse: (value) => value || '',
@@ -47,17 +27,9 @@ export default function Pokedex() {
     serialize: (value) => (value === 'all' ? '' : value),
   })
 
-  const [isEditing, setIsEditing] = useQueryState('edit', {
-    defaultValue: false,
-    parse: (value) => value === 'true',
-    serialize: (value) => (value ? 'true' : ''),
-  })
-
   const [showCreateForm, setShowCreateForm] = useState(false)
 
-  const { data: pokemonList = [], isLoading, error } = usePokemon()
-  const { data: selectedPokemon, isLoading: isLoadingPokemon } =
-    usePokemonById(selectedPokemonId)
+  const { data: pokemonList = [], error } = getMany()
 
   const filteredPokemon = pokemonList.filter((pokemon) => {
     const matchesSearch =
@@ -74,19 +46,6 @@ export default function Pokedex() {
     return matchesSearch && matchesType
   })
 
-  function handleBackToList() {
-    setSelectedPokemonId(null)
-    setIsEditing(false)
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-white text-xl">Loading Pokemon...</div>
-      </div>
-    )
-  }
-
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -97,36 +56,6 @@ export default function Pokedex() {
     )
   }
 
-  if (selectedPokemon && isEditing) {
-    return (
-      <PokemonForm
-        pokemon={selectedPokemon}
-        mode="edit"
-        onBack={() => setIsEditing(false)}
-      />
-    )
-  }
-
-  if (selectedPokemonId) {
-    if (isLoadingPokemon) {
-      return (
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="text-white text-xl">Loading Pokemon details...</div>
-        </div>
-      )
-    }
-
-    if (selectedPokemon) {
-      return (
-        <PokemonDetail
-          pokemon={selectedPokemon as PokemonWithRelations}
-          onBack={handleBackToList}
-          onEdit={() => setIsEditing(true)}
-        />
-      )
-    }
-  }
-
   if (showCreateForm) {
     return <PokemonForm onBack={() => setShowCreateForm(false)} />
   }
@@ -135,9 +64,7 @@ export default function Pokedex() {
     <div className="overflow-hidden rounded-lg bg-black/70">
       <div className="container mx-auto overflow-y-auto px-6 py-8">
         {/* Page Title */}
-        <div className="mb-4">
-          <h1 className="mb-2 font-bold text-4xl text-white">Pokedex</h1>
-        </div>
+        <h1 className="mb-4 font-bold text-4xl text-white">Pokedex</h1>
 
         {/* Controls Row */}
         <div className="mb-8 flex items-center justify-between">
@@ -213,11 +140,7 @@ export default function Pokedex() {
 
         <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredPokemon.map((pokemon) => (
-            <PokemonCard
-              key={pokemon.id}
-              pokemon={pokemon}
-              onClick={() => setSelectedPokemonId(pokemon.id)}
-            />
+            <PokemonCard key={pokemon.id} pokemon={pokemon} />
           ))}
         </div>
       </div>
