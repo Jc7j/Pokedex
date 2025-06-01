@@ -3,11 +3,15 @@ import Image from 'next/image'
 import { Button } from '~/components/ui'
 
 interface PokemonCardProps {
-  pokemon: Pokemon
+  pokemon: Pokemon & {
+    types: Array<{ type: { name: string } }>
+  }
   onClick?: () => void
 }
 
 export default function PokemonCard({ pokemon, onClick }: PokemonCardProps) {
+  const types = pokemon.types.map((pokemonType) => pokemonType.type.name)
+
   return (
     <Button
       variant="ghost"
@@ -32,7 +36,7 @@ export default function PokemonCard({ pokemon, onClick }: PokemonCardProps) {
       <div className="gap-2 text-center">
         <p className="text-white">N° {pokemon.pokedexNumber}</p>
         <h3 className="font-bold text-lg text-white">{pokemon.name}</h3>
-        <p className="text-primary">Electric</p>
+        <p className="text-primary capitalize">{types.join(', ')}</p>
       </div>
     </Button>
   )

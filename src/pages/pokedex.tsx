@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui'
+import { usePokemon, usePokemonById } from '~/lib/queries'
 
 type PokemonWithRelations = Pokemon & {
   types: Array<{ type: { name: string } }>
@@ -25,72 +26,6 @@ type PokemonWithRelations = Pokemon & {
       photoUrl: string | null
     }
   }>
-}
-
-const pokemonList: Pokemon[] = [
-  {
-    id: 1,
-    name: 'Bulbasaur',
-    pokedexNumber: 1,
-    photoUrl: '/Pikachu.png',
-    description:
-      'A strange seed was planted on its back at birth. The plant sprouts and grows with this Pokémon.',
-    heightCm: 70,
-    weightKg: 6.9,
-    genderFemaleRatio: 0.125,
-    genderMaleRatio: 0.875,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 2,
-    name: 'Ivysaur',
-    pokedexNumber: 2,
-    photoUrl: '/Pikachu.png',
-    description:
-      'When the bulb on its back grows large, it appears to lose the ability to stand on its hind legs.',
-    heightCm: 100,
-    weightKg: 13.0,
-    genderFemaleRatio: 0.125,
-    genderMaleRatio: 0.875,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 25,
-    name: 'Pikachu',
-    pokedexNumber: 25,
-    photoUrl: '/Pikachu.png',
-    description:
-      'When it is angered, it immediately discharges the energy stored in the pouches in its cheeks.',
-    heightCm: 40,
-    weightKg: 6.0,
-    genderFemaleRatio: 0.5,
-    genderMaleRatio: 0.5,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 26,
-    name: 'Raichu',
-    pokedexNumber: 26,
-    photoUrl: '/Pikachu.png',
-    description:
-      'Its long tail serves as a ground to protect itself from its own high-voltage power.',
-    heightCm: 80,
-    weightKg: 30.0,
-    genderFemaleRatio: 0.5,
-    genderMaleRatio: 0.5,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-]
-
-const pokemonTypes: Record<number, string[]> = {
-  1: ['grass'],
-  2: ['grass'],
-  25: ['electric'],
-  26: ['electric'],
 }
 
 export default function Pokedex() {
@@ -120,9 +55,9 @@ export default function Pokedex() {
 
   const [showCreateForm, setShowCreateForm] = useState(false)
 
-  const selectedPokemon = selectedPokemonId
-    ? pokemonList.find((p) => p.id === selectedPokemonId)
-    : null
+  const { data: pokemonList = [], isLoading, error } = usePokemon()
+  const { data: selectedPokemon, isLoading: isLoadingPokemon } =
+    usePokemonById(selectedPokemonId)
 
   const filteredPokemon = pokemonList.filter((pokemon) => {
     const matchesSearch =
@@ -131,7 +66,10 @@ export default function Pokedex() {
 
     const matchesType =
       typeFilter === 'all' ||
-      pokemonTypes[pokemon.id]?.includes(typeFilter.toLowerCase())
+      pokemon.types.some(
+        (pokemonType) =>
+          pokemonType.type.name.toLowerCase() === typeFilter.toLowerCase()
+      )
 
     return matchesSearch && matchesType
   })
@@ -139,6 +77,24 @@ export default function Pokedex() {
   function handleBackToList() {
     setSelectedPokemonId(null)
     setIsEditing(false)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-white text-xl">Loading Pokemon...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-red-400 text-xl">
+          Error loading Pokemon: {error.message}
+        </div>
+      </div>
+    )
   }
 
   if (selectedPokemon && isEditing) {
@@ -151,32 +107,24 @@ export default function Pokedex() {
     )
   }
 
-  if (selectedPokemon) {
-    const pokemonWithRelations: PokemonWithRelations = {
-      ...selectedPokemon,
-      types: [{ type: { name: 'Electric' } }],
-      evolutionsTo:
-        selectedPokemon.id === 25
-          ? [
-              {
-                toPokemon: {
-                  id: 26,
-                  name: 'Raichu',
-                  pokedexNumber: 26,
-                  photoUrl: '/Pokedex.png',
-                },
-              },
-            ]
-          : [],
+  if (selectedPokemonId) {
+    if (isLoadingPokemon) {
+      return (
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-white text-xl">Loading Pokemon details...</div>
+        </div>
+      )
     }
 
-    return (
-      <PokemonDetail
-        pokemon={pokemonWithRelations}
-        onBack={handleBackToList}
-        onEdit={() => setIsEditing(true)}
-      />
-    )
+    if (selectedPokemon) {
+      return (
+        <PokemonDetail
+          pokemon={selectedPokemon as PokemonWithRelations}
+          onBack={handleBackToList}
+          onEdit={() => setIsEditing(true)}
+        />
+      )
+    }
   }
 
   if (showCreateForm) {
