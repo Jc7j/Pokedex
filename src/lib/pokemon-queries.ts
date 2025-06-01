@@ -1,38 +1,10 @@
 import type { Pokemon } from '@prisma/client'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { queryClient } from '~/pages/_app'
+import type { PokemonEvolution } from '~/server/types'
 
 export type PokemonWithRelations = Pokemon & {
-  types: Array<{ type: { name: string } }>
-  abilities: Array<{ ability: { name: string } }>
-  eggGroups: Array<{ eggGroup: { name: string } }>
-  evolutionsFrom: Array<{
-    method: string | null
-    fromPokemon: {
-      id: number
-      name: string
-      pokedexNumber: number
-      photoUrl: string | null
-    }
-  }>
-  evolutionsTo: Array<{
-    method: string | null
-    toPokemon: {
-      id: number
-      name: string
-      pokedexNumber: number
-      photoUrl: string | null
-    }
-  }>
-  evolutionFromId?: number
-  evolutionMethod?: string
-  evolutionPhotoUrl?: string | null
-}
-
-export interface PokemonFormProps {
-  onBack: () => void
-  pokemon?: PokemonWithRelations | null
-  mode?: 'create' | 'edit'
+  evolution: PokemonEvolution | null
 }
 
 export function getMany() {
@@ -105,36 +77,12 @@ export function create() {
     mutationFn: async (
       data: Partial<PokemonWithRelations>
     ): Promise<{ success: boolean; message: string }> => {
-      // Transform relation data to simple arrays for API
-      const apiData = {
-        name: data.name,
-        pokedexNumber: data.pokedexNumber,
-        photoUrl: data.photoUrl,
-        description: data.description,
-        heightCm: data.heightCm,
-        weightKg: data.weightKg,
-        genderFemaleRatio: data.genderFemaleRatio,
-        genderMaleRatio: data.genderMaleRatio,
-        types: data.types?.map((t) =>
-          typeof t === 'string' ? t : t.type.name
-        ),
-        abilities: data.abilities?.map((a) =>
-          typeof a === 'string' ? a : a.ability.name
-        ),
-        eggGroups: data.eggGroups?.map((g) =>
-          typeof g === 'string' ? g : g.eggGroup.name
-        ),
-        evolutionFromId: data.evolutionFromId,
-        evolutionMethod: data.evolutionMethod,
-        evolutionPhotoUrl: data.evolutionPhotoUrl,
-      }
-
       const response = await fetch('/api/pokemon', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(apiData),
+        body: JSON.stringify(data),
       })
 
       if (!response.ok) {
@@ -156,36 +104,12 @@ export function update() {
     ): Promise<{ success: boolean; message: string }> => {
       const { id, ...updateData } = data
 
-      // Transform relation data to simple arrays for API
-      const apiData = {
-        name: updateData.name,
-        pokedexNumber: updateData.pokedexNumber,
-        photoUrl: updateData.photoUrl,
-        description: updateData.description,
-        heightCm: updateData.heightCm,
-        weightKg: updateData.weightKg,
-        genderFemaleRatio: updateData.genderFemaleRatio,
-        genderMaleRatio: updateData.genderMaleRatio,
-        types: updateData.types?.map((t) =>
-          typeof t === 'string' ? t : t.type.name
-        ),
-        abilities: updateData.abilities?.map((a) =>
-          typeof a === 'string' ? a : a.ability.name
-        ),
-        eggGroups: updateData.eggGroups?.map((g) =>
-          typeof g === 'string' ? g : g.eggGroup.name
-        ),
-        evolutionFromId: updateData.evolutionFromId,
-        evolutionMethod: updateData.evolutionMethod,
-        evolutionPhotoUrl: updateData.evolutionPhotoUrl,
-      }
-
       const response = await fetch(`/api/pokemon/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(apiData),
+        body: JSON.stringify(updateData),
       })
 
       if (!response.ok) {

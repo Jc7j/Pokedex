@@ -3,15 +3,17 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { Button, Input, Label, Textarea } from '~/components/ui'
 import {
-  type PokemonFormProps,
   type PokemonWithRelations,
   create,
   update,
 } from '~/lib/pokemon-queries'
 import { tryCatch } from '~/lib/try-catch'
 
-// TODO (IGNORE): Came across where create/update an evolution requires a relation to an existing pokemon
-// This couldve been resolved by having better initial planning. Stopped here for now due to time constraints.
+interface PokemonFormProps {
+  onBack: () => void
+  pokemon?: PokemonWithRelations | null
+  mode?: 'create' | 'edit'
+}
 
 export function PokemonForm({
   onBack,
@@ -74,20 +76,11 @@ export function PokemonForm({
       weightKg: pokemon?.weightKg?.toString() ?? '',
       genderFemaleRatio: pokemon?.genderFemaleRatio?.toString() ?? '',
       genderMaleRatio: pokemon?.genderMaleRatio?.toString() ?? '',
-      types:
-        pokemon?.types?.map((t: { type: { name: string } }) => t.type.name) ??
-        [],
-      abilities:
-        pokemon?.abilities?.map(
-          (a: { ability: { name: string } }) => a.ability.name
-        ) ?? [],
-      eggGroups:
-        pokemon?.eggGroups?.map(
-          (g: { eggGroup: { name: string } }) => g.eggGroup.name
-        ) ?? [],
-      evolutionDescription: pokemon?.evolutionsTo?.[0]?.method ?? '',
-      evolutionPhotoUrl:
-        pokemon?.evolutionsTo?.[0]?.toPokemon?.photoUrl ?? null,
+      types: pokemon?.types || '',
+      abilities: pokemon?.abilities || '',
+      eggGroups: pokemon?.eggGroups || '',
+      evolutionDescription: pokemon?.evolution?.method ?? '',
+      evolutionPhotoUrl: pokemon?.evolution?.photoUrl ?? null,
     },
     onSubmit: async ({ value }) => {
       const submitData = {
@@ -265,18 +258,8 @@ export function PokemonForm({
             {(field) => (
               <div>
                 <Input
-                  value={
-                    Array.isArray(field.state.value)
-                      ? field.state.value.join(', ')
-                      : ''
-                  }
-                  onChange={(e) => {
-                    const types = e.target.value
-                      .split(',')
-                      .map((t) => t.trim())
-                      .filter((t) => t !== '')
-                    field.handleChange(types)
-                  }}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
                   className="border-gray-600 bg-gray-800 text-white placeholder-gray-400"
                   placeholder="Type"
                   disabled={isLoading}
@@ -361,18 +344,8 @@ export function PokemonForm({
             {(field) => (
               <div>
                 <Input
-                  value={
-                    Array.isArray(field.state.value)
-                      ? field.state.value.join(', ')
-                      : ''
-                  }
-                  onChange={(e) => {
-                    const abilities = e.target.value
-                      .split(',')
-                      .map((a) => a.trim())
-                      .filter((a) => a !== '')
-                    field.handleChange(abilities)
-                  }}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
                   className="border-gray-600 bg-gray-800 text-white placeholder-gray-400"
                   placeholder="Abilities"
                   disabled={isLoading}
@@ -385,18 +358,8 @@ export function PokemonForm({
             {(field) => (
               <div>
                 <Input
-                  value={
-                    Array.isArray(field.state.value)
-                      ? field.state.value.join(', ')
-                      : ''
-                  }
-                  onChange={(e) => {
-                    const eggGroups = e.target.value
-                      .split(',')
-                      .map((g) => g.trim())
-                      .filter((g) => g !== '')
-                    field.handleChange(eggGroups)
-                  }}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
                   className="border-gray-600 bg-gray-800 text-white placeholder-gray-400"
                   placeholder="Egg Groups"
                   disabled={isLoading}

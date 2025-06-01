@@ -8,12 +8,12 @@ import { PokemonForm } from '~/components/PokemonForm'
 import {
   Button,
   Dialog,
-  Label,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Label,
   Skeleton,
 } from '~/components/ui'
 import { deletePokemon, getOne } from '~/lib/pokemon-queries'
@@ -102,23 +102,23 @@ export default function PokemonPage() {
 
             <div className="grid grid-cols-3 gap-6">
               <div>
-                <Skeleton className="h-4 w-12 mb-2" />
+                <Skeleton className="mb-2 h-4 w-12" />
                 <Skeleton className="h-5 w-16" />
               </div>
               <div>
-                <Skeleton className="h-4 w-12 mb-2" />
+                <Skeleton className="mb-2 h-4 w-12" />
                 <Skeleton className="h-5 w-20" />
               </div>
               <div>
-                <Skeleton className="h-4 w-20 mb-2" />
+                <Skeleton className="mb-2 h-4 w-20" />
                 <Skeleton className="h-5 w-24" />
               </div>
               <div>
-                <Skeleton className="h-4 w-16 mb-2" />
+                <Skeleton className="mb-2 h-4 w-16" />
                 <Skeleton className="h-5 w-32" />
               </div>
               <div>
-                <Skeleton className="h-4 w-20 mb-2" />
+                <Skeleton className="mb-2 h-4 w-20" />
                 <Skeleton className="h-5 w-28" />
               </div>
             </div>
@@ -183,9 +183,7 @@ export default function PokemonPage() {
           </div>
 
           <span className="flex gap-2 text-primary">
-            {pokemon.types.map((pokemonType, index) => (
-              <p key={index}>{pokemonType.type.name}</p>
-            ))}
+            <p>{pokemon.types || 'n/a'}</p>
           </span>
 
           <p className="text-white leading-relaxed">{pokemon.description}</p>
@@ -200,7 +198,7 @@ export default function PokemonPage() {
                     )
                       .toString()
                       .padStart(2, '0')}"`
-                  : 'Unknown'}
+                  : 'n/a'}
               </p>
             </div>
             <div>
@@ -208,7 +206,7 @@ export default function PokemonPage() {
               <p>
                 {pokemon.weightKg
                   ? `${(pokemon.weightKg * 2.205).toFixed(1)} lbs`
-                  : 'Unknown'}
+                  : 'n/a'}
               </p>
             </div>
             <div>
@@ -225,68 +223,22 @@ export default function PokemonPage() {
             </div>
             <div>
               <Label>Abilities</Label>
-              <p>
-                {pokemon.abilities?.map((a) => a.ability.name).join(', ') ||
-                  'Unknown'}
-              </p>
+              <p>{pokemon.abilities || 'n/a'}</p>
             </div>
             <div>
               <Label>Egg Groups</Label>
-              <p>
-                {pokemon.eggGroups?.map((g) => g.eggGroup.name).join(', ') ||
-                  'Unknown'}
-              </p>
+              <p>{pokemon.eggGroups || 'n/a'}</p>
             </div>
           </div>
 
-          {(pokemon.evolutionsFrom.length > 0 ||
-            pokemon.evolutionsTo.length > 0) && (
+          {pokemon.evolution && (
             <div className="space-y-4">
-              <Label>Evolutions</Label>
-
-              {pokemon.evolutionsFrom.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-gray-300 text-sm">
-                    {pokemon.evolutionsFrom[0]?.method}
-                  </p>
-
-                  <div className="flex items-center gap-4">
-                    <Link
-                      href={`/pokemon/${pokemon.evolutionsFrom[0]?.fromPokemon.id}`}
-                      className="transition-opacity hover:opacity-80"
-                    >
-                      <Image
-                        src={
-                          pokemon.evolutionsFrom[0]?.fromPokemon.photoUrl ||
-                          '/Pikachu.png'
-                        }
-                        alt={
-                          pokemon.evolutionsFrom[0]?.fromPokemon.name ||
-                          'Previous evolution'
-                        }
-                        width={80}
-                        height={80}
-                        className="object-contain"
-                      />
-                    </Link>
-                    <p className="text-2xl text-white">→</p>
-                    <Image
-                      src={pokemon.photoUrl || '/Pikachu.png'}
-                      alt={pokemon.name}
-                      width={80}
-                      height={80}
-                      className="object-contain"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {pokemon.evolutionsTo.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-gray-300 text-sm">
-                    {pokemon.evolutionsTo[0]?.method}
-                  </p>
-
+              <Label>Evolution</Label>
+              <div className="space-y-2">
+                <p className="text-gray-300 text-sm">
+                  {pokemon.evolution.method}
+                </p>
+                {pokemon.evolution.photoUrl && (
                   <div className="flex items-center gap-4">
                     <Image
                       src={pokemon.photoUrl || '/Pikachu.png'}
@@ -296,27 +248,16 @@ export default function PokemonPage() {
                       className="object-contain"
                     />
                     <p className="text-2xl text-white">→</p>
-                    <Link
-                      href={`/pokemon/${pokemon.evolutionsTo[0]?.toPokemon.id}`}
-                      className="transition-opacity hover:opacity-80"
-                    >
-                      <Image
-                        src={
-                          pokemon.evolutionsTo[0]?.toPokemon.photoUrl ||
-                          '/Pikachu.png'
-                        }
-                        alt={
-                          pokemon.evolutionsTo[0]?.toPokemon.name ||
-                          'Evolution Pokemon'
-                        }
-                        width={80}
-                        height={80}
-                        className="object-contain"
-                      />
-                    </Link>
+                    <Image
+                      src={pokemon.evolution.photoUrl}
+                      alt="Evolution"
+                      width={80}
+                      height={80}
+                      className="object-contain"
+                    />
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
         </div>

@@ -3,14 +3,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 interface PokemonCardProps {
-  pokemon: Pokemon & {
-    types: Array<{ type: { name: string } }>
-  }
+  pokemon: Pokemon
 }
 
 export default function PokemonCard({ pokemon }: PokemonCardProps) {
-  const types = pokemon.types.map((pokemonType) => pokemonType.type.name)
-
   return (
     <Link
       href={`/pokemon/${pokemon.id}`}
@@ -28,7 +24,7 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
       <div className="gap-2 text-center">
         <p className="text-white">N° {pokemon.pokedexNumber}</p>
         <h3 className="font-bold text-lg text-white">{pokemon.name}</h3>
-        <p className="text-primary capitalize">{types.join(', ')}</p>
+        <p className="text-primary capitalize">{pokemon.types ?? 'n/a'}</p>
       </div>
     </Link>
   )

@@ -39,10 +39,7 @@ export default function Pokemon() {
 
     const matchesType =
       typeFilter === 'all' ||
-      pokemon.types.some(
-        (pokemonType) =>
-          pokemonType.type.name.toLowerCase() === typeFilter.toLowerCase()
-      )
+      (pokemon.types?.toLowerCase().includes(typeFilter.toLowerCase()) ?? false)
 
     return matchesSearch && matchesType
   })
@@ -140,23 +137,24 @@ export default function Pokemon() {
         </div>
 
         <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {isLoading ? (
-            // Show skeleton cards while loading
-            Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="flex h-[271px] w-[276px] flex-col items-center justify-center gap-[30px] rounded-[16px] bg-gray-800/80 px-[39px] py-[19px]">
-                <Skeleton className="h-[135px] w-[144px]" />
-                <div className="gap-2 text-center">
-                  <Skeleton className="h-4 w-16 mb-2" />
-                  <Skeleton className="h-6 w-20 mb-2" />
-                  <Skeleton className="h-4 w-24" />
+          {isLoading
+            ? // Show skeleton cards while loading
+              Array.from({ length: 8 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="flex h-[271px] w-[276px] flex-col items-center justify-center gap-[30px] rounded-[16px] bg-gray-800/80 px-[39px] py-[19px]"
+                >
+                  <Skeleton className="h-[135px] w-[144px]" />
+                  <div className="gap-2 text-center">
+                    <Skeleton className="mb-2 h-4 w-16" />
+                    <Skeleton className="mb-2 h-6 w-20" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
                 </div>
-              </div>
-            ))
-          ) : (
-            filteredPokemon.map((pokemon) => (
-              <PokemonCard key={pokemon.id} pokemon={pokemon} />
-            ))
-          )}
+              ))
+            : filteredPokemon.map((pokemon) => (
+                <PokemonCard key={pokemon.id} pokemon={pokemon} />
+              ))}
         </div>
       </div>
     </div>

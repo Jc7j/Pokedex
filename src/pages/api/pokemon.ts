@@ -27,13 +27,6 @@ export default async function handler(
         const { data, error } = await tryCatch(
           db.pokemon.findFirst({
             skip: skip,
-            include: {
-              types: {
-                include: {
-                  type: true,
-                },
-              },
-            },
           })
         )
 
@@ -54,13 +47,6 @@ export default async function handler(
       // Default GET - fetch all pokemon
       const { data, error } = await tryCatch(
         db.pokemon.findMany({
-          include: {
-            types: {
-              include: {
-                type: true,
-              },
-            },
-          },
           orderBy: {
             pokedexNumber: 'asc',
           },
@@ -88,7 +74,6 @@ export default async function handler(
         types,
         abilities,
         eggGroups,
-        evolutionFromId,
         evolutionMethod,
         evolutionPhotoUrl,
       } = req.body
@@ -99,69 +84,31 @@ export default async function handler(
           .json({ error: 'Name and Pokedex number are required' })
       }
 
-      const { error } = await tryCatch(
-        db.$transaction(async (tx) => {
-          const newPokemon = await tx.pokemon.create({
-            data: {
-              name,
-              pokedexNumber: Number(pokedexNumber),
-              photoUrl: photoUrl || null,
-              description: description || null,
-              heightCm: heightCm ? Number(heightCm) : null,
-              weightKg: weightKg ? Number(weightKg) : null,
-              genderFemaleRatio: genderFemaleRatio
-                ? Number(genderFemaleRatio)
-                : null,
-              genderMaleRatio: genderMaleRatio ? Number(genderMaleRatio) : null,
-              types: {
-                create:
-                  types?.map((typeName: string) => ({
-                    type: {
-                      connectOrCreate: {
-                        where: { name: typeName.toLowerCase() },
-                        create: { name: typeName.toLowerCase() },
-                      },
-                    },
-                  })) || [],
-              },
-              abilities: {
-                create:
-                  abilities?.map((abilityName: string) => ({
-                    ability: {
-                      connectOrCreate: {
-                        where: { name: abilityName.toLowerCase() },
-                        create: { name: abilityName.toLowerCase() },
-                      },
-                    },
-                  })) || [],
-              },
-              eggGroups: {
-                create:
-                  eggGroups?.map((eggGroupName: string) => ({
-                    eggGroup: {
-                      connectOrCreate: {
-                        where: { name: eggGroupName.toLowerCase() },
-                        create: { name: eggGroupName.toLowerCase() },
-                      },
-                    },
-                  })) || [],
-              },
-            },
-          })
-
-          // Create evolution if data provided
-          if (evolutionFromId && evolutionMethod) {
-            await tx.evolution.create({
-              data: {
-                fromId: Number(evolutionFromId),
-                toId: newPokemon.id,
-                method: evolutionMethod,
-                evolutionPhotoUrl: evolutionPhotoUrl || null,
-              },
-            })
+      const evolutionData = evolutionMethod
+        ? {
+            method: evolutionMethod,
+            photoUrl: evolutionPhotoUrl || null,
           }
+        : null
 
-          return newPokemon
+      const { data, error } = await tryCatch(
+        db.pokemon.create({
+          data: {
+            name,
+            pokedexNumber: Number(pokedexNumber),
+            photoUrl: photoUrl || null,
+            description: description || null,
+            heightCm: heightCm ? Number(heightCm) : null,
+            weightKg: weightKg ? Number(weightKg) : null,
+            genderFemaleRatio: genderFemaleRatio
+              ? Number(genderFemaleRatio)
+              : null,
+            genderMaleRatio: genderMaleRatio ? Number(genderMaleRatio) : null,
+            types: types || null,
+            abilities: abilities || null,
+            eggGroups: eggGroups || null,
+            evolution: evolutionData,
+          },
         })
       )
 
@@ -172,7 +119,7 @@ export default async function handler(
 
       return res
         .status(201)
-        .json({ success: true, message: 'Pokemon created successfully' })
+        .json({ success: true, message: 'Pokemon created successfully', data })
     }
 
     default:

@@ -22,47 +22,6 @@ export default async function handler(
           where: {
             id: pokemonId,
           },
-          include: {
-            types: {
-              include: {
-                type: true,
-              },
-            },
-            abilities: {
-              include: {
-                ability: true,
-              },
-            },
-            eggGroups: {
-              include: {
-                eggGroup: true,
-              },
-            },
-            evolutionsFrom: {
-              include: {
-                fromPokemon: {
-                  select: {
-                    id: true,
-                    name: true,
-                    pokedexNumber: true,
-                    photoUrl: true,
-                  },
-                },
-              },
-            },
-            evolutionsTo: {
-              include: {
-                toPokemon: {
-                  select: {
-                    id: true,
-                    name: true,
-                    pokedexNumber: true,
-                    photoUrl: true,
-                  },
-                },
-              },
-            },
-          },
         })
       )
 
@@ -97,89 +56,49 @@ export default async function handler(
         types,
         abilities,
         eggGroups,
-        evolutionFromId,
         evolutionMethod,
         evolutionPhotoUrl,
       } = req.body
 
+      // Prepare evolution data
+      const evolutionData = evolutionMethod
+        ? {
+            method: evolutionMethod,
+            photoUrl: evolutionPhotoUrl || null,
+          }
+        : null
+
       const { error } = await tryCatch(
-        db.$transaction(async (tx) => {
-          // Update the Pokemon first
-          await tx.pokemon.update({
-            where: {
-              id: pokemonId,
-            },
-            data: {
-              name: name || undefined,
-              pokedexNumber: pokedexNumber ? Number(pokedexNumber) : undefined,
-              photoUrl: photoUrl !== undefined ? photoUrl : undefined,
-              description: description !== undefined ? description : undefined,
-              heightCm: heightCm ? Number(heightCm) : undefined,
-              weightKg: weightKg ? Number(weightKg) : undefined,
+        db.pokemon.update({
+          where: {
+            id: pokemonId,
+          },
+          data: {
+            ...(name !== undefined && { name }),
+            ...(pokedexNumber !== undefined && {
+              pokedexNumber: Number(pokedexNumber),
+            }),
+            ...(photoUrl !== undefined && { photoUrl }),
+            ...(description !== undefined && { description }),
+            ...(heightCm !== undefined && {
+              heightCm: heightCm ? Number(heightCm) : null,
+            }),
+            ...(weightKg !== undefined && {
+              weightKg: weightKg ? Number(weightKg) : null,
+            }),
+            ...(genderFemaleRatio !== undefined && {
               genderFemaleRatio: genderFemaleRatio
                 ? Number(genderFemaleRatio)
-                : undefined,
-              genderMaleRatio: genderMaleRatio
-                ? Number(genderMaleRatio)
-                : undefined,
-              ...(types && {
-                types: {
-                  deleteMany: {},
-                  create: types.map((typeName: string) => ({
-                    type: {
-                      connectOrCreate: {
-                        where: { name: typeName.toLowerCase() },
-                        create: { name: typeName.toLowerCase() },
-                      },
-                    },
-                  })),
-                },
-              }),
-              ...(abilities && {
-                abilities: {
-                  deleteMany: {},
-                  create: abilities.map((abilityName: string) => ({
-                    ability: {
-                      connectOrCreate: {
-                        where: { name: abilityName.toLowerCase() },
-                        create: { name: abilityName.toLowerCase() },
-                      },
-                    },
-                  })),
-                },
-              }),
-              ...(eggGroups && {
-                eggGroups: {
-                  deleteMany: {},
-                  create: eggGroups.map((eggGroupName: string) => ({
-                    eggGroup: {
-                      connectOrCreate: {
-                        where: { name: eggGroupName.toLowerCase() },
-                        create: { name: eggGroupName.toLowerCase() },
-                      },
-                    },
-                  })),
-                },
-              }),
-            },
-          })
-
-          if (evolutionFromId && evolutionMethod) {
-            await tx.evolution.deleteMany({
-              where: {
-                OR: [{ fromId: pokemonId }, { toId: pokemonId }],
-              },
-            })
-
-            await tx.evolution.create({
-              data: {
-                fromId: Number(evolutionFromId),
-                toId: pokemonId,
-                method: evolutionMethod,
-                evolutionPhotoUrl: evolutionPhotoUrl || null,
-              },
-            })
-          }
+                : null,
+            }),
+            ...(genderMaleRatio !== undefined && {
+              genderMaleRatio: genderMaleRatio ? Number(genderMaleRatio) : null,
+            }),
+            ...(types !== undefined && { types }),
+            ...(abilities !== undefined && { abilities }),
+            ...(eggGroups !== undefined && { eggGroups }),
+            ...(evolutionData !== null && { evolution: evolutionData }),
+          },
         })
       )
 
@@ -201,29 +120,8 @@ export default async function handler(
       }
 
       const { error } = await tryCatch(
-        db.$transaction(async (tx) => {
-          // Delete all related records first
-          await tx.pokemonType.deleteMany({
-            where: { pokemonId },
-          })
-
-          await tx.pokemonAbility.deleteMany({
-            where: { pokemonId },
-          })
-
-          await tx.pokemonEggGroup.deleteMany({
-            where: { pokemonId },
-          })
-
-          await tx.evolution.deleteMany({
-            where: {
-              OR: [{ fromId: pokemonId }, { toId: pokemonId }],
-            },
-          })
-
-          await tx.pokemon.delete({
-            where: { id: pokemonId },
-          })
+        db.pokemon.delete({
+          where: { id: pokemonId },
         })
       )
 

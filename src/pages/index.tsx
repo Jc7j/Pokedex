@@ -102,7 +102,7 @@ export default function Home() {
                     </p>
                   </div>
                   <p className="font-semibold text-sm capitalize">
-                    {currentPokemon?.types?.[0]?.type?.name || 'Unknown'}
+                    {currentPokemon?.types ?? 'n/a'}
                   </p>
                   <p className="py-1 text-xs leading-tight">
                     {currentPokemon?.description || 'No description available.'}

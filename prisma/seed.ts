@@ -1,70 +1,8 @@
 import { db } from '~/server/db'
 
 async function main() {
-  const grassType = await db.type.upsert({
-    where: { name: 'grass' },
-    update: {},
-    create: { name: 'grass' },
-  })
-
-  const poisonType = await db.type.upsert({
-    where: { name: 'poison' },
-    update: {},
-    create: { name: 'poison' },
-  })
-
-  const electricType = await db.type.upsert({
-    where: { name: 'electric' },
-    update: {},
-    create: { name: 'electric' },
-  })
-
-  const overgrow = await db.ability.upsert({
-    where: { name: 'overgrow' },
-    update: {},
-    create: { name: 'overgrow' },
-  })
-
-  const chlorophyll = await db.ability.upsert({
-    where: { name: 'chlorophyll' },
-    update: {},
-    create: { name: 'chlorophyll' },
-  })
-
-  const staticAbility = await db.ability.upsert({
-    where: { name: 'static' },
-    update: {},
-    create: { name: 'static' },
-  })
-
-  const monster = await db.eggGroup.upsert({
-    where: { name: 'monster' },
-    update: {},
-    create: { name: 'monster' },
-  })
-
-  const grassEggGroup = await db.eggGroup.upsert({
-    where: { name: 'grass' },
-    update: {},
-    create: { name: 'grass' },
-  })
-
-  const field = await db.eggGroup.upsert({
-    where: { name: 'field' },
-    update: {},
-    create: { name: 'field' },
-  })
-
-  const fairy = await db.eggGroup.upsert({
-    where: { name: 'fairy' },
-    update: {},
-    create: { name: 'fairy' },
-  })
-
-  const bulbasaur = await db.pokemon.upsert({
-    where: { pokedexNumber: 1 },
-    update: {},
-    create: {
+  const pokemonData = [
+    {
       name: 'Bulbasaur',
       pokedexNumber: 1,
       photoUrl: '/Pikachu.png',
@@ -74,31 +12,16 @@ async function main() {
       weightKg: 6.9,
       genderFemaleRatio: 0.125,
       genderMaleRatio: 0.875,
-      types: {
-        create: [
-          { type: { connect: { id: grassType.id } } },
-          { type: { connect: { id: poisonType.id } } },
-        ],
-      },
-      abilities: {
-        create: [
-          { ability: { connect: { id: overgrow.id } } },
-          { ability: { connect: { id: chlorophyll.id } } },
-        ],
-      },
-      eggGroups: {
-        create: [
-          { eggGroup: { connect: { id: monster.id } } },
-          { eggGroup: { connect: { id: grassEggGroup.id } } },
-        ],
+      types: 'Grass, Poison',
+      abilities: 'Overgrow, Chlorophyll',
+      eggGroups: 'Monster, Grass',
+      evolution: {
+        method: 'Level 16',
+        photoUrl: '/Raichu.png',
+        toPokemonName: 'Ivysaur',
       },
     },
-  })
-
-  const ivysaur = await db.pokemon.upsert({
-    where: { pokedexNumber: 2 },
-    update: {},
-    create: {
+    {
       name: 'Ivysaur',
       pokedexNumber: 2,
       photoUrl: '/Raichu.png',
@@ -108,31 +31,134 @@ async function main() {
       weightKg: 13.0,
       genderFemaleRatio: 0.125,
       genderMaleRatio: 0.875,
-      types: {
-        create: [
-          { type: { connect: { id: grassType.id } } },
-          { type: { connect: { id: poisonType.id } } },
-        ],
-      },
-      abilities: {
-        create: [
-          { ability: { connect: { id: overgrow.id } } },
-          { ability: { connect: { id: chlorophyll.id } } },
-        ],
-      },
-      eggGroups: {
-        create: [
-          { eggGroup: { connect: { id: monster.id } } },
-          { eggGroup: { connect: { id: grassEggGroup.id } } },
-        ],
+      types: 'Grass, Poison',
+      abilities: 'Overgrow, Chlorophyll',
+      eggGroups: 'Monster, Grass',
+      evolution: {
+        method: 'Level 32',
+        photoUrl: '/Pikachu.png',
+        toPokemonName: 'Venusaur',
       },
     },
-  })
-
-  const pikachu = await db.pokemon.upsert({
-    where: { pokedexNumber: 25 },
-    update: {},
-    create: {
+    {
+      name: 'Venusaur',
+      pokedexNumber: 3,
+      photoUrl: '/Pikachu.png',
+      description:
+        'The flower on its back releases a soothing scent that enhances emotions.',
+      heightCm: 200,
+      weightKg: 100.0,
+      genderFemaleRatio: 0.125,
+      genderMaleRatio: 0.875,
+      types: 'Grass, Poison',
+      abilities: 'Overgrow, Chlorophyll',
+      eggGroups: 'Monster, Grass',
+    },
+    {
+      name: 'Charmander',
+      pokedexNumber: 4,
+      photoUrl: '/Raichu.png',
+      description:
+        'Obviously prefers hot places. When it rains, steam is said to spout from the tip of its tail.',
+      heightCm: 60,
+      weightKg: 8.5,
+      genderFemaleRatio: 0.125,
+      genderMaleRatio: 0.875,
+      types: 'Fire',
+      abilities: 'Blaze, Solar Power',
+      eggGroups: 'Monster, Dragon',
+      evolution: {
+        method: 'Level 16',
+        photoUrl: '/Pikachu.png',
+        toPokemonName: 'Charmeleon',
+      },
+    },
+    {
+      name: 'Charmeleon',
+      pokedexNumber: 5,
+      photoUrl: '/Pikachu.png',
+      description:
+        'When it swings its burning tail, it elevates the temperature to unbearably hot levels.',
+      heightCm: 110,
+      weightKg: 19.0,
+      genderFemaleRatio: 0.125,
+      genderMaleRatio: 0.875,
+      types: 'Fire',
+      abilities: 'Blaze, Solar Power',
+      eggGroups: 'Monster, Dragon',
+      evolution: {
+        method: 'Level 36',
+        photoUrl: '/Raichu.png',
+        toPokemonName: 'Charizard',
+      },
+    },
+    {
+      name: 'Charizard',
+      pokedexNumber: 6,
+      photoUrl: '/Raichu.png',
+      description:
+        'Spits fire that is hot enough to melt boulders. Known to cause forest fires unintentionally.',
+      heightCm: 170,
+      weightKg: 90.5,
+      genderFemaleRatio: 0.125,
+      genderMaleRatio: 0.875,
+      types: 'Fire, Flying',
+      abilities: 'Blaze, Solar Power',
+      eggGroups: 'Monster, Dragon',
+    },
+    {
+      name: 'Squirtle',
+      pokedexNumber: 7,
+      photoUrl: '/Pikachu.png',
+      description:
+        'After birth, its back swells and hardens into a shell. Powerfully sprays foam from its mouth.',
+      heightCm: 50,
+      weightKg: 9.0,
+      genderFemaleRatio: 0.125,
+      genderMaleRatio: 0.875,
+      types: 'Water',
+      abilities: 'Torrent, Rain Dish',
+      eggGroups: 'Monster, Water 1',
+      evolution: {
+        method: 'Level 16',
+        photoUrl: '/Raichu.png',
+        toPokemonName: 'Wartortle',
+      },
+    },
+    {
+      name: 'Wartortle',
+      pokedexNumber: 8,
+      photoUrl: '/Raichu.png',
+      description:
+        'Often hides in water to stalk unwary prey. For swimming fast, it moves its ears to maintain balance.',
+      heightCm: 100,
+      weightKg: 22.5,
+      genderFemaleRatio: 0.125,
+      genderMaleRatio: 0.875,
+      types: 'Water',
+      abilities: 'Torrent, Rain Dish',
+      eggGroups: 'Monster, Water 1',
+      evolution: {
+        method: 'Level 36',
+        photoUrl: '/Pikachu.png',
+        toPokemonName: 'Blastoise',
+      },
+    },
+    {
+      name: 'Blastoise',
+      pokedexNumber: 9,
+      photoUrl: '/Pikachu.png',
+      description:
+        'A brutal Pokémon with pressurized water jets on its shell. They are used for high speed tackles.',
+      heightCm: 160,
+      weightKg: 85.5,
+      genderFemaleRatio: 0.125,
+      genderMaleRatio: 0.875,
+      types: 'Water',
+      abilities: 'Torrent, Rain Dish',
+      eggGroups: 'Monster, Water 1',
+    },
+    {
       name: 'Pikachu',
       pokedexNumber: 25,
       photoUrl: '/Pikachu.png',
@@ -142,25 +168,16 @@ async function main() {
       weightKg: 6.0,
       genderFemaleRatio: 0.5,
       genderMaleRatio: 0.5,
-      types: {
-        create: [{ type: { connect: { id: electricType.id } } }],
-      },
-      abilities: {
-        create: [{ ability: { connect: { id: staticAbility.id } } }],
-      },
-      eggGroups: {
-        create: [
-          { eggGroup: { connect: { id: field.id } } },
-          { eggGroup: { connect: { id: fairy.id } } },
-        ],
+      types: 'Electric',
+      abilities: 'Static, Lightning Rod',
+      eggGroups: 'Field, Fairy',
+      evolution: {
+        method: 'Thunder Stone',
+        photoUrl: '/Raichu.png',
+        toPokemonName: 'Raichu',
       },
     },
-  })
-
-  const raichu = await db.pokemon.upsert({
-    where: { pokedexNumber: 26 },
-    update: {},
-    create: {
+    {
       name: 'Raichu',
       pokedexNumber: 26,
       photoUrl: '/Raichu.png',
@@ -170,42 +187,23 @@ async function main() {
       weightKg: 30.0,
       genderFemaleRatio: 0.5,
       genderMaleRatio: 0.5,
-      types: {
-        create: [{ type: { connect: { id: electricType.id } } }],
-      },
-      abilities: {
-        create: [{ ability: { connect: { id: staticAbility.id } } }],
-      },
-      eggGroups: {
-        create: [
-          { eggGroup: { connect: { id: field.id } } },
-          { eggGroup: { connect: { id: fairy.id } } },
-        ],
-      },
+      types: 'Electric',
+      abilities: 'Static, Lightning Rod',
+      eggGroups: 'Field, Fairy',
     },
-  })
+  ]
 
-  await db.evolution.upsert({
-    where: { id: 1 },
-    update: {},
-    create: {
-      fromId: bulbasaur.id,
-      toId: ivysaur.id,
-      method: 'level 16',
-    },
-  })
+  const pokemonPromises = pokemonData.map((pokemon) =>
+    db.pokemon.upsert({
+      where: { pokedexNumber: pokemon.pokedexNumber },
+      update: {},
+      create: pokemon,
+    })
+  )
 
-  await db.evolution.upsert({
-    where: { id: 2 },
-    update: {},
-    create: {
-      fromId: pikachu.id,
-      toId: raichu.id,
-      method: 'Thunder Stone',
-    },
-  })
+  await Promise.all(pokemonPromises)
 
-  console.log('✅ Database seeded successfully!')
+  console.log('✅ Database seeded successfully with 11 Pokemon!')
 }
 
 main()
