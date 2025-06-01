@@ -1,13 +1,13 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiRequest, NextApiResponse } from 'next'
 
 type ResponseData = {
-  message: string;
-};
+  message: string
+}
 
 export default function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<ResponseData>,
+  _req: NextApiRequest,
+  res: NextApiResponse<ResponseData>
 ) {
-  console.log("CALL BACKEND");
-  res.status(200).json({ message: "Condor family!" });
+  console.log('CALL BACKEND')
+  res.status(200).json({ message: 'Condor family!' })
 }

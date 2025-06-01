@@ -10,11 +10,83 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model Pokemon {
+  id                  Int               @id @default(autoincrement())
+  name                String
+  pokedexNumber       Int               @unique
+  photoUrl            String?           // e.g. "pikachu.jpg"
+  description         String?           // e.g. "When it is angered, it immediately discharges..."
+  heightCm            Float?            // store height in centimeters (e.g. 40.6 for 1′04″)
+  weightKg            Float?            // store weight in kilograms (e.g. 6.0 for 13.2 lbs)
+  genderFemaleRatio   Float?            // percentage (e.g. 12.5)
+  genderMaleRatio     Float?            // percentage (e.g. 87.5)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
-    @@index([name])
+  types               PokemonType[]
+  abilities           PokemonAbility[]
+  eggGroups           PokemonEggGroup[]
+  evolutionsFrom      Evolution[]       @relation("EvolutionTo")
+  evolutionsTo        Evolution[]       @relation("EvolutionFrom")
+}
+
+model Type {
+  id        Int             @id @default(autoincrement())
+  name      String          @unique     // e.g. "Electric", "Grass", "Water"
+  pokemons  PokemonType[]
+}
+
+model PokemonType {
+  pokemon   Pokemon @relation(fields: [pokemonId], references: [id])
+  pokemonId Int
+  type      Type    @relation(fields: [typeId], references: [id])
+  typeId    Int
+
+  @@id([pokemonId, typeId])
+}
+
+model Ability {
+  id        Int               @id @default(autoincrement())
+  name      String            @unique    // e.g. "Static", "Overgrow", "Chlorophyll"
+  pokemons  PokemonAbility[]
+}
+
+model PokemonAbility {
+  pokemon    Pokemon @relation(fields: [pokemonId], references: [id])
+  pokemonId  Int
+  ability    Ability @relation(fields: [abilityId], references: [id])
+  abilityId  Int
+
+  @@id([pokemonId, abilityId])
+}
+
+model EggGroup {
+  id        Int              @id @default(autoincrement())
+  name      String           @unique    // e.g. "Monster", "Grass", "Fairy"
+  pokemons  PokemonEggGroup[]
+}
+
+model PokemonEggGroup {
+  pokemon      Pokemon  @relation(fields: [pokemonId], references: [id])
+  pokemonId    Int
+  eggGroup     EggGroup @relation(fields: [eggGroupId], references: [id])
+  eggGroupId   Int
+
+  @@id([pokemonId, eggGroupId])
+}
+
+
+model Evolution {
+  id              Int      @id @default(autoincrement())
+  
+  fromPokemon     Pokemon  @relation("EvolutionFrom", fields: [fromId], references: [id])
+  fromId          Int
+
+  toPokemon       Pokemon  @relation("EvolutionTo", fields: [toId], references: [id])
+  toId            Int
+
+  method          String?   // e.g. "use a Thunder Stone", "level 16", etc.
+  evolutionPhotoUrl String?
+  
+  createdAt       DateTime  @default(now())
 }
