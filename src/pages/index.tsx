@@ -1,17 +1,21 @@
 import Head from 'next/head'
 import { PokeDevice } from '~/components/PokeDevice'
 
-//
 export default function Home() {
-  // Hardcoded Pokémon data for now
   const pokemonData = {
     name: 'Pikachu',
-    number: 25,
-    type: 'Electric',
+    pokedexNumber: 25,
+    photoUrl: '/Pikachu.png',
     description:
       'When it is angered, it immediately discharges the energy stored in the pouches in its cheeks.',
-    height: '1\' 04"',
-    weight: '13.2 lbs',
+    heightCm: 40,
+    weightKg: 6.0,
+    types: ['Electric'],
+    genderFemaleRatio: 0.5,
+    genderMaleRatio: 0.5,
+    id: 1,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   }
 
   return (

@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-    provider = "sqlite"
+    provider = "postgresql"
     url      = env("DATABASE_URL")
 }
 
@@ -14,12 +14,12 @@ model Pokemon {
   id                  Int               @id @default(autoincrement())
   name                String
   pokedexNumber       Int               @unique
-  photoUrl            String?           // e.g. "pikachu.jpg"
-  description         String?           // e.g. "When it is angered, it immediately discharges..."
-  heightCm            Float?            // store height in centimeters (e.g. 40.6 for 1′04″)
-  weightKg            Float?            // store weight in kilograms (e.g. 6.0 for 13.2 lbs)
-  genderFemaleRatio   Float?            // percentage (e.g. 12.5)
-  genderMaleRatio     Float?            // percentage (e.g. 87.5)
+  photoUrl            String?          
+  description         String?           
+  heightCm            Float?            
+  weightKg            Float?            
+  genderFemaleRatio   Float?            
+  genderMaleRatio     Float?            
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
