@@ -40,7 +40,7 @@ export default function PokemonPage() {
     deleteMutation.mutate(pokemonId, {
       onSuccess: () => {
         setShowDeleteDialog(false)
-        router.push('/pokedex')
+        router.push('/pokemon')
       },
       onError: (error) => {
         console.error('Delete error:', error)
