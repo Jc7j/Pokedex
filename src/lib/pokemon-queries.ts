@@ -1,5 +1,6 @@
 import type { Pokemon } from '@prisma/client'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { queryClient } from '~/pages/_app'
 
 type PokemonWithTypes = Pokemon & {
   types: Array<{ type: { name: string } }>
@@ -75,8 +76,6 @@ export function getOne(id: number | null) {
 }
 
 export function create() {
-  const queryClient = useQueryClient()
-
   return useMutation({
     mutationFn: async (
       data: CreatePokemonData
@@ -102,8 +101,6 @@ export function create() {
 }
 
 export function update() {
-  const queryClient = useQueryClient()
-
   return useMutation({
     mutationFn: async (
       data: UpdatePokemonData
@@ -119,6 +116,27 @@ export function update() {
 
       if (!response.ok) {
         throw new Error('Failed to update pokemon')
+      }
+
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pokemon'] })
+    },
+  })
+}
+
+export function deletePokemon() {
+  return useMutation({
+    mutationFn: async (
+      id: number
+    ): Promise<{ success: boolean; message: string }> => {
+      const response = await fetch(`/api/pokemon/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete pokemon')
       }
 
       return response.json()

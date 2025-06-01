@@ -3,9 +3,18 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useQueryState } from 'nuqs'
+import { useState } from 'react'
 import { PokemonForm } from '~/components/PokemonForm'
 import { Button, Label } from '~/components/ui'
-import { getOne } from '~/lib/pokemon-queries'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '~/components/ui/dialog'
+import { deletePokemon, getOne } from '~/lib/pokemon-queries'
 
 export default function PokemonPage() {
   const router = useRouter()
@@ -18,7 +27,25 @@ export default function PokemonPage() {
     serialize: (value) => (value ? 'true' : ''),
   })
 
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
   const { data: pokemon, error } = getOne(pokemonId)
+  const deleteMutation = deletePokemon()
+
+  function handleDelete() {
+    if (!pokemonId) return
+
+    deleteMutation.mutate(pokemonId, {
+      onSuccess: () => {
+        setShowDeleteDialog(false)
+        router.push('/pokedex')
+      },
+      onError: (error) => {
+        console.error('Delete error:', error)
+        // Keep dialog open to show error, but user can close it
+      },
+    })
+  }
 
   if (error) {
     return (
@@ -64,7 +91,11 @@ export default function PokemonPage() {
             <Pencil className="h-4 w-4" />
             Edit
           </Button>
-          <Button size="sm" className="flex items-center gap-2 ">
+          <Button
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => setShowDeleteDialog(true)}
+          >
             <Trash2 className="h-4 w-4" />
             Delete
           </Button>
@@ -83,23 +114,20 @@ export default function PokemonPage() {
         </div>
 
         <div className="space-y-4 rounded-lg bg-gray-800/60 p-4 text-white">
-          <div>
-            <div className="flex justify-between">
-              <h1 className="font-semibold text-4xl text-white">
-                {pokemon.name}
-              </h1>
-              <p className="text-lg">N° {pokemon.pokedexNumber}</p>
-            </div>
-
-            <span className="text-primary">
-              {pokemon.types.map((pokemonType, index) => (
-                <p key={index}>{pokemonType.type.name}</p>
-              ))}
-            </span>
+          <div className="flex justify-between">
+            <h1 className="font-semibold text-4xl text-white">
+              {pokemon.name}
+            </h1>
+            <p className="text-lg">N° {pokemon.pokedexNumber}</p>
           </div>
-          <p className="text-white leading-relaxed">
-            {pokemon.description || 'No description available.'}
-          </p>
+
+          <span className="flex gap-2 text-primary">
+            {pokemon.types.map((pokemonType, index) => (
+              <p key={index}>{pokemonType.type.name}</p>
+            ))}
+          </span>
+
+          <p className="text-white leading-relaxed">{pokemon.description}</p>
 
           <div className="grid grid-cols-3 gap-6 text-sm">
             <div>
@@ -232,6 +260,44 @@ export default function PokemonPage() {
           )}
         </div>
       </div>
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Pokemon</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {pokemon?.name}? This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          {deleteMutation.error && (
+            <div className="rounded-lg border border-red-500 bg-red-900/50 p-3">
+              <p className="text-red-200 text-sm">
+                Error:{' '}
+                {deleteMutation.error?.message || 'Failed to delete Pokemon'}
+              </p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

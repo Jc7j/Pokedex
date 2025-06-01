@@ -12,7 +12,7 @@ const inter = Inter({
   display: 'swap',
 })
 
-const queryClient = new QueryClient()
+export const queryClient = new QueryClient()
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (

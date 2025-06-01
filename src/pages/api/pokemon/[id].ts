@@ -121,7 +121,7 @@ export default async function handler(
               : undefined,
             ...(types && {
               types: {
-                deleteMany: {}, // Remove existing type relationships
+                deleteMany: {},
                 create: types.map((typeName: string) => ({
                   type: {
                     connectOrCreate: {
@@ -172,10 +172,54 @@ export default async function handler(
         .json({ success: true, message: 'Pokemon updated successfully' })
     }
 
+    case 'DELETE': {
+      const pokemonId = Number.parseInt(id as string, 10)
+
+      if (Number.isNaN(pokemonId)) {
+        return res.status(400).json({ error: 'Invalid pokemon ID' })
+      }
+
+      const { error } = await tryCatch(
+        prisma.$transaction(async (tx) => {
+          // Delete all related records first
+          await tx.pokemonType.deleteMany({
+            where: { pokemonId },
+          })
+
+          await tx.pokemonAbility.deleteMany({
+            where: { pokemonId },
+          })
+
+          await tx.pokemonEggGroup.deleteMany({
+            where: { pokemonId },
+          })
+
+          await tx.evolution.deleteMany({
+            where: {
+              OR: [{ fromId: pokemonId }, { toId: pokemonId }],
+            },
+          })
+
+          await tx.pokemon.delete({
+            where: { id: pokemonId },
+          })
+        })
+      )
+
+      if (error) {
+        console.error('Error deleting pokemon:', error)
+        return res.status(500).json({ error: 'Failed to delete pokemon' })
+      }
+
+      return res
+        .status(200)
+        .json({ success: true, message: 'Pokemon deleted successfully' })
+    }
+
     default:
       break
   }
 
-  res.setHeader('Allow', ['GET', 'PUT'])
+  res.setHeader('Allow', ['GET', 'PUT', 'DELETE'])
   res.status(405).json({ error: `Method ${method} not allowed` })
 }
