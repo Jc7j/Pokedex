@@ -76,6 +76,8 @@ export default async function handler(
         eggGroups,
         evolutionMethod,
         evolutionPhotoUrl,
+        evolutionToPokemonName,
+        evolution, // Accept complete evolution object
       } = req.body
 
       if (!name || !pokedexNumber) {
@@ -84,12 +86,19 @@ export default async function handler(
           .json({ error: 'Name and Pokedex number are required' })
       }
 
-      const evolutionData = evolutionMethod
-        ? {
-            method: evolutionMethod,
-            photoUrl: evolutionPhotoUrl || null,
-          }
-        : null
+      // Handle evolution data - accept either complete object or separate fields
+      let evolutionData = null
+      if (evolution) {
+        // If complete evolution object is provided
+        evolutionData = evolution
+      } else if (evolutionMethod) {
+        // If separate fields are provided (for form compatibility)
+        evolutionData = {
+          method: evolutionMethod,
+          photoUrl: evolutionPhotoUrl || null,
+          toPokemonName: evolutionToPokemonName || null,
+        }
+      }
 
       const { data, error } = await tryCatch(
         db.pokemon.create({
