@@ -1,8 +1,7 @@
 import type { Pokemon } from '@prisma/client'
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
 import Image from 'next/image'
-import { Button } from '~/components/ui/button'
-import { Label } from '~/components/ui/label'
+import { Button, Label } from '~/components/ui'
 
 interface PokemonDetailProps {
   pokemon: Pokemon & {
@@ -29,7 +28,7 @@ export function PokemonDetail({ pokemon, onBack }: PokemonDetailProps) {
             onClick={onBack}
             className="flex items-center gap-2 text-white hover:bg-gray-700"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-8 w-8" />
           </Button>
 
           <div className="flex items-center gap-2">

@@ -1,18 +1,19 @@
 import type { Pokemon } from '@prisma/client'
 import { ListFilter, Plus, Search } from 'lucide-react'
-import Head from 'next/head'
 import { useQueryState } from 'nuqs'
+import { useState } from 'react'
+import { CreatePokemon } from '~/components/CreatePokemon'
 import PokemonCard from '~/components/PokemonCard'
 import { PokemonDetail } from '~/components/PokemonDetail'
-import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
 import {
+  Button,
+  Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select'
+} from '~/components/ui'
 
 type PokemonWithRelations = Pokemon & {
   types: Array<{ type: { name: string } }>
@@ -98,6 +99,8 @@ export default function Pokedex() {
     serialize: (value) => value,
   })
 
+  const [showCreateForm, setShowCreateForm] = useState(false)
+
   const selectedPokemon = selectedPokemonId
     ? pokemonList.find((p) => p.id === selectedPokemonId)
     : null
@@ -114,6 +117,14 @@ export default function Pokedex() {
 
   const handleBackToList = () => {
     setSelectedPokemonId(null)
+  }
+
+  const handleCreateNew = () => {
+    setShowCreateForm(true)
+  }
+
+  const handleBackFromCreate = () => {
+    setShowCreateForm(false)
   }
 
   if (selectedPokemon) {
@@ -140,108 +151,105 @@ export default function Pokedex() {
     )
   }
 
+  // Show create form
+  if (showCreateForm) {
+    return <CreatePokemon onBack={handleBackFromCreate} />
+  }
+
   return (
-    <>
-      <Head>
-        <title>Pokédx - Condorsoft</title>
-        <meta name="description" content="Browse the complete Pokédx" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <div className="overflow-hidden rounded-lg bg-black/70">
+      <div className="container mx-auto overflow-y-auto px-6 py-8">
+        {/* Page Title */}
+        <div className="mb-8">
+          <h1 className="mb-2 font-bold text-4xl text-white">Pokedex</h1>
+        </div>
 
-      <div className="overflow-hidden rounded-lg bg-black/70">
-        <div className="container mx-auto overflow-y-auto px-6 py-8">
-          {/* Page Title */}
-          <div className="mb-8">
-            <h1 className="mb-2 font-bold text-4xl text-white">Pokedex</h1>
-          </div>
-
-          {/* Controls Row */}
-          <div className="mb-8 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {/* Search Bar */}
-              <div className="relative w-80">
-                <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search pokemon"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border-gray-600 bg-gray-800/80 pl-10 text-white placeholder-gray-400 focus:border-gray-500"
-                />
-              </div>
-
-              {/* Type Filter */}
-              <div className="flex items-center">
-                <Select>
-                  <SelectTrigger className="border-gray-600 bg-gray-800/80 text-white">
-                    <div className="flex items-center gap-2">
-                      <ListFilter className="h-4 w-4 text-white" />
-                      <SelectValue placeholder="Type" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent className="border-gray-600 bg-gray-800">
-                    <SelectItem
-                      value="all"
-                      className="text-white hover:bg-gray-700"
-                    >
-                      All
-                    </SelectItem>
-                    <SelectItem
-                      value="fire"
-                      className="text-white hover:bg-gray-700"
-                    >
-                      Fire
-                    </SelectItem>
-                    <SelectItem
-                      value="water"
-                      className="text-white hover:bg-gray-700"
-                    >
-                      Water
-                    </SelectItem>
-                    <SelectItem
-                      value="grass"
-                      className="text-white hover:bg-gray-700"
-                    >
-                      Grass
-                    </SelectItem>
-                    <SelectItem
-                      value="electric"
-                      className="text-white hover:bg-gray-700"
-                    >
-                      Electric
-                    </SelectItem>
-                    <SelectItem
-                      value="psychic"
-                      className="text-white hover:bg-gray-700"
-                    >
-                      Psychic
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+        {/* Controls Row */}
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {/* Search Bar */}
+            <div className="relative w-80">
+              <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search pokemon"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="border-gray-600 bg-gray-800/80 pl-10 text-white placeholder-gray-400 focus:border-gray-500"
+              />
             </div>
 
-            {/* Create New Button */}
-            <Button className="border border-gray-600 bg-gray-800/20 text-white hover:bg-gray-700">
-              <div className="mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-white">
-                <Plus className="h-3 w-3 text-black" />
-              </div>
-              Create New
-            </Button>
+            {/* Type Filter */}
+            <div className="flex items-center">
+              <Select>
+                <SelectTrigger className="border-gray-600 bg-gray-800/80 text-white">
+                  <div className="flex items-center gap-2">
+                    <ListFilter className="h-4 w-4 text-white" />
+                    <SelectValue placeholder="Type" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="border-gray-600 bg-gray-800">
+                  <SelectItem
+                    value="all"
+                    className="text-white hover:bg-gray-700"
+                  >
+                    All
+                  </SelectItem>
+                  <SelectItem
+                    value="fire"
+                    className="text-white hover:bg-gray-700"
+                  >
+                    Fire
+                  </SelectItem>
+                  <SelectItem
+                    value="water"
+                    className="text-white hover:bg-gray-700"
+                  >
+                    Water
+                  </SelectItem>
+                  <SelectItem
+                    value="grass"
+                    className="text-white hover:bg-gray-700"
+                  >
+                    Grass
+                  </SelectItem>
+                  <SelectItem
+                    value="electric"
+                    className="text-white hover:bg-gray-700"
+                  >
+                    Electric
+                  </SelectItem>
+                  <SelectItem
+                    value="psychic"
+                    className="text-white hover:bg-gray-700"
+                  >
+                    Psychic
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          {/* Pokemon Grid */}
-          <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredPokemon.map((pokemon) => (
-              <PokemonCard
-                key={pokemon.id}
-                pokemon={pokemon}
-                onClick={() => handlePokemonClick(pokemon)}
-              />
-            ))}
-          </div>
+          {/* Create New Button */}
+          <Button onClick={handleCreateNew}>
+            <div className="mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-white">
+              <Plus className="h-3 w-3 text-black" />
+            </div>
+            Create New
+          </Button>
+        </div>
+
+        {/* Pokemon Grid */}
+        <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredPokemon.map((pokemon) => (
+            <PokemonCard
+              key={pokemon.id}
+              pokemon={pokemon}
+              onClick={() => handlePokemonClick(pokemon)}
+            />
+          ))}
         </div>
       </div>
-    </>
+    </div>
   )
 }

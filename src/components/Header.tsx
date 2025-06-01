@@ -17,7 +17,7 @@ export function Header() {
       <nav className="flex items-center gap-[50px]">
         <Link
           href="/"
-          className={`relative pb-1 font-bold text-md text-white transition-colors hover:text-yellow-300 ${
+          className={`relative font-bold text-md text-white transition-colors hover:text-yellow-300 ${
             router.pathname === '/'
               ? 'after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-white after:content-[""] hover:after:bg-yellow-300'
               : ''
@@ -27,7 +27,7 @@ export function Header() {
         </Link>
         <Link
           href="/pokedex"
-          className={`relative pb-1 font-bold text-md text-white transition-colors hover:text-yellow-300 ${
+          className={`relative font-bold text-md text-white transition-colors hover:text-yellow-300 ${
             router.pathname === '/pokedex'
               ? 'after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-white after:content-[""] hover:after:bg-yellow-300'
               : ''
