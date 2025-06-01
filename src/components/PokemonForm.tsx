@@ -10,6 +10,9 @@ import {
 } from '~/lib/pokemon-queries'
 import { tryCatch } from '~/lib/try-catch'
 
+// TODO (IGNORE): Came across where create/update an evolution requires a relation to an existing pokemon
+// This couldve been resolved by having better initial planning. Stopped here for now due to time constraints.
+
 export function PokemonForm({
   onBack,
   pokemon,
@@ -103,6 +106,8 @@ export function PokemonForm({
         types: value.types,
         abilities: value.abilities,
         eggGroups: value.eggGroups,
+        evolutionMethod: value.evolutionDescription || null,
+        evolutionPhotoUrl: value.evolutionPhotoUrl,
       }
 
       if (isEditMode && pokemon) {

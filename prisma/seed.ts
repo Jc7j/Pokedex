@@ -19,18 +19,6 @@ async function main() {
     create: { name: 'electric' },
   })
 
-  const fireType = await db.type.upsert({
-    where: { name: 'fire' },
-    update: {},
-    create: { name: 'fire' },
-  })
-
-  const waterType = await db.type.upsert({
-    where: { name: 'water' },
-    update: {},
-    create: { name: 'water' },
-  })
-
   const overgrow = await db.ability.upsert({
     where: { name: 'overgrow' },
     update: {},
@@ -47,18 +35,6 @@ async function main() {
     where: { name: 'static' },
     update: {},
     create: { name: 'static' },
-  })
-
-  const blaze = await db.ability.upsert({
-    where: { name: 'blaze' },
-    update: {},
-    create: { name: 'blaze' },
-  })
-
-  const torrent = await db.ability.upsert({
-    where: { name: 'torrent' },
-    update: {},
-    create: { name: 'torrent' },
   })
 
   const monster = await db.eggGroup.upsert({

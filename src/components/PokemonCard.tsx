@@ -18,7 +18,7 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
       aria-label={`View details for ${pokemon.name}, Pokémon number ${pokemon.pokedexNumber}`}
     >
       <Image
-        src="/Pikachu.png"
+        src={pokemon.photoUrl ?? '/Pikachu.png'}
         alt={pokemon.name}
         width={144}
         height={135}

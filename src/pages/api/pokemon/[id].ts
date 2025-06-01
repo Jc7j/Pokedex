@@ -97,66 +97,89 @@ export default async function handler(
         types,
         abilities,
         eggGroups,
+        evolutionFromId,
+        evolutionMethod,
+        evolutionPhotoUrl,
       } = req.body
 
       const { error } = await tryCatch(
-        db.pokemon.update({
-          where: {
-            id: pokemonId,
-          },
-          data: {
-            name: name || undefined,
-            pokedexNumber: pokedexNumber ? Number(pokedexNumber) : undefined,
-            photoUrl: photoUrl !== undefined ? photoUrl : undefined,
-            description: description !== undefined ? description : undefined,
-            heightCm: heightCm ? Number(heightCm) : undefined,
-            weightKg: weightKg ? Number(weightKg) : undefined,
-            genderFemaleRatio: genderFemaleRatio
-              ? Number(genderFemaleRatio)
-              : undefined,
-            genderMaleRatio: genderMaleRatio
-              ? Number(genderMaleRatio)
-              : undefined,
-            ...(types && {
-              types: {
-                deleteMany: {},
-                create: types.map((typeName: string) => ({
-                  type: {
-                    connectOrCreate: {
-                      where: { name: typeName.toLowerCase() },
-                      create: { name: typeName.toLowerCase() },
+        db.$transaction(async (tx) => {
+          // Update the Pokemon first
+          await tx.pokemon.update({
+            where: {
+              id: pokemonId,
+            },
+            data: {
+              name: name || undefined,
+              pokedexNumber: pokedexNumber ? Number(pokedexNumber) : undefined,
+              photoUrl: photoUrl !== undefined ? photoUrl : undefined,
+              description: description !== undefined ? description : undefined,
+              heightCm: heightCm ? Number(heightCm) : undefined,
+              weightKg: weightKg ? Number(weightKg) : undefined,
+              genderFemaleRatio: genderFemaleRatio
+                ? Number(genderFemaleRatio)
+                : undefined,
+              genderMaleRatio: genderMaleRatio
+                ? Number(genderMaleRatio)
+                : undefined,
+              ...(types && {
+                types: {
+                  deleteMany: {},
+                  create: types.map((typeName: string) => ({
+                    type: {
+                      connectOrCreate: {
+                        where: { name: typeName.toLowerCase() },
+                        create: { name: typeName.toLowerCase() },
+                      },
                     },
-                  },
-                })),
-              },
-            }),
-            ...(abilities && {
-              abilities: {
-                deleteMany: {},
-                create: abilities.map((abilityName: string) => ({
-                  ability: {
-                    connectOrCreate: {
-                      where: { name: abilityName.toLowerCase() },
-                      create: { name: abilityName.toLowerCase() },
+                  })),
+                },
+              }),
+              ...(abilities && {
+                abilities: {
+                  deleteMany: {},
+                  create: abilities.map((abilityName: string) => ({
+                    ability: {
+                      connectOrCreate: {
+                        where: { name: abilityName.toLowerCase() },
+                        create: { name: abilityName.toLowerCase() },
+                      },
                     },
-                  },
-                })),
-              },
-            }),
-            ...(eggGroups && {
-              eggGroups: {
-                deleteMany: {},
-                create: eggGroups.map((eggGroupName: string) => ({
-                  eggGroup: {
-                    connectOrCreate: {
-                      where: { name: eggGroupName.toLowerCase() },
-                      create: { name: eggGroupName.toLowerCase() },
+                  })),
+                },
+              }),
+              ...(eggGroups && {
+                eggGroups: {
+                  deleteMany: {},
+                  create: eggGroups.map((eggGroupName: string) => ({
+                    eggGroup: {
+                      connectOrCreate: {
+                        where: { name: eggGroupName.toLowerCase() },
+                        create: { name: eggGroupName.toLowerCase() },
+                      },
                     },
-                  },
-                })),
+                  })),
+                },
+              }),
+            },
+          })
+
+          if (evolutionFromId && evolutionMethod) {
+            await tx.evolution.deleteMany({
+              where: {
+                OR: [{ fromId: pokemonId }, { toId: pokemonId }],
               },
-            }),
-          },
+            })
+
+            await tx.evolution.create({
+              data: {
+                fromId: Number(evolutionFromId),
+                toId: pokemonId,
+                method: evolutionMethod,
+                evolutionPhotoUrl: evolutionPhotoUrl || null,
+              },
+            })
+          }
         })
       )
 

@@ -24,6 +24,9 @@ export type PokemonWithRelations = Pokemon & {
       photoUrl: string | null
     }
   }>
+  evolutionFromId?: number
+  evolutionMethod?: string
+  evolutionPhotoUrl?: string | null
 }
 
 export interface PokemonFormProps {
@@ -39,6 +42,44 @@ export function getMany() {
       const response = await fetch('/api/pokemon')
       if (!response.ok) {
         throw new Error('Failed to fetch pokemon')
+      }
+      return response.json()
+    },
+  })
+}
+
+export function getCount() {
+  return useQuery({
+    queryKey: ['pokemon', 'count'],
+    queryFn: async (): Promise<{ count: number }> => {
+      const response = await fetch('/api/pokemon?action=count')
+      if (!response.ok) {
+        throw new Error('Failed to fetch pokemon count')
+      }
+      return response.json()
+    },
+  })
+}
+
+export function getRandom() {
+  return useMutation({
+    mutationFn: async (): Promise<PokemonWithRelations> => {
+      // First get the count
+      const countResponse = await fetch('/api/pokemon?action=count')
+      if (!countResponse.ok) {
+        throw new Error('Failed to fetch pokemon count')
+      }
+      const { count } = await countResponse.json()
+
+      // Generate random skip value
+      const randomSkip = Math.floor(Math.random() * count)
+
+      // Get random pokemon
+      const response = await fetch(
+        `/api/pokemon?action=random&skip=${randomSkip}`
+      )
+      if (!response.ok) {
+        throw new Error('Failed to fetch random pokemon')
       }
       return response.json()
     },
@@ -83,6 +124,9 @@ export function create() {
         eggGroups: data.eggGroups?.map((g) =>
           typeof g === 'string' ? g : g.eggGroup.name
         ),
+        evolutionFromId: data.evolutionFromId,
+        evolutionMethod: data.evolutionMethod,
+        evolutionPhotoUrl: data.evolutionPhotoUrl,
       }
 
       const response = await fetch('/api/pokemon', {
@@ -131,6 +175,9 @@ export function update() {
         eggGroups: updateData.eggGroups?.map((g) =>
           typeof g === 'string' ? g : g.eggGroup.name
         ),
+        evolutionFromId: updateData.evolutionFromId,
+        evolutionMethod: updateData.evolutionMethod,
+        evolutionPhotoUrl: updateData.evolutionPhotoUrl,
       }
 
       const response = await fetch(`/api/pokemon/${id}`, {
