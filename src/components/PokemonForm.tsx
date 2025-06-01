@@ -1,47 +1,14 @@
-import type { Pokemon } from '@prisma/client'
 import { useForm } from '@tanstack/react-form'
 import Image from 'next/image'
 import { useState } from 'react'
 import { Button, Input, Label, Textarea } from '~/components/ui'
-import { create, update } from '~/lib/pokemon-queries'
+import {
+  type PokemonFormProps,
+  type PokemonWithRelations,
+  create,
+  update,
+} from '~/lib/pokemon-queries'
 import { tryCatch } from '~/lib/try-catch'
-
-interface PokemonFormProps {
-  onBack: () => void
-  pokemon?:
-    | (Pokemon & {
-        types?: Array<{ type: { name: string } }>
-        abilities?: Array<{ ability: { name: string } }>
-        eggGroups?: Array<{ eggGroup: { name: string } }>
-        evolutionsTo?: Array<{
-          method: string | null
-          toPokemon: {
-            id: number
-            name: string
-            pokedexNumber: number
-            photoUrl: string | null
-          }
-        }>
-      })
-    | null
-  mode?: 'create' | 'edit'
-}
-
-type PokemonFormData = {
-  name: string
-  pokedexNumber: string
-  photoUrl: string | null
-  description: string
-  heightCm: string
-  weightKg: string
-  genderFemaleRatio: string
-  genderMaleRatio: string
-  types: string[]
-  abilities: string[]
-  eggGroups: string[]
-  evolutionDescription: string
-  evolutionPhotoUrl: string | null
-}
 
 export function PokemonForm({
   onBack,
@@ -52,11 +19,18 @@ export function PokemonForm({
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [uploadingEvolution, setUploadingEvolution] = useState(false)
 
-  const createMutation = create()
-  const updateMutation = update()
+  const {
+    mutateAsync: createMutation,
+    isPending: isCreating,
+    error: createError,
+  } = create()
+  const {
+    mutateAsync: updateMutation,
+    isPending: isUpdating,
+    error: updateError,
+  } = update()
 
-  // Helper function to upload file
-  const uploadFile = async (file: File): Promise<string | null> => {
+  async function uploadFile(file: File): Promise<string | null> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
       reader.onload = async (e) => {
@@ -97,23 +71,35 @@ export function PokemonForm({
       weightKg: pokemon?.weightKg?.toString() ?? '',
       genderFemaleRatio: pokemon?.genderFemaleRatio?.toString() ?? '',
       genderMaleRatio: pokemon?.genderMaleRatio?.toString() ?? '',
-      types: pokemon?.types?.map((t) => t.type.name) ?? [],
-      abilities: pokemon?.abilities?.map((a) => a.ability.name) ?? [],
-      eggGroups: pokemon?.eggGroups?.map((g) => g.eggGroup.name) ?? [],
+      types:
+        pokemon?.types?.map((t: { type: { name: string } }) => t.type.name) ??
+        [],
+      abilities:
+        pokemon?.abilities?.map(
+          (a: { ability: { name: string } }) => a.ability.name
+        ) ?? [],
+      eggGroups:
+        pokemon?.eggGroups?.map(
+          (g: { eggGroup: { name: string } }) => g.eggGroup.name
+        ) ?? [],
       evolutionDescription: pokemon?.evolutionsTo?.[0]?.method ?? '',
       evolutionPhotoUrl:
         pokemon?.evolutionsTo?.[0]?.toPokemon?.photoUrl ?? null,
-    } as PokemonFormData,
+    },
     onSubmit: async ({ value }) => {
       const submitData = {
         name: value.name,
-        pokedexNumber: value.pokedexNumber,
+        pokedexNumber: Number(value.pokedexNumber),
         photoUrl: value.photoUrl,
         description: value.description,
-        heightCm: value.heightCm,
-        weightKg: value.weightKg,
-        genderFemaleRatio: value.genderFemaleRatio,
-        genderMaleRatio: value.genderMaleRatio,
+        heightCm: value.heightCm ? Number(value.heightCm) : null,
+        weightKg: value.weightKg ? Number(value.weightKg) : null,
+        genderFemaleRatio: value.genderFemaleRatio
+          ? Number(value.genderFemaleRatio)
+          : null,
+        genderMaleRatio: value.genderMaleRatio
+          ? Number(value.genderMaleRatio)
+          : null,
         types: value.types,
         abilities: value.abilities,
         eggGroups: value.eggGroups,
@@ -121,10 +107,10 @@ export function PokemonForm({
 
       if (isEditMode && pokemon) {
         const { error } = await tryCatch(
-          updateMutation.mutateAsync({
+          updateMutation({
             id: pokemon.id,
             ...submitData,
-          })
+          } as unknown as Partial<PokemonWithRelations> & { id: number })
         )
         if (!error) {
           onBack()
@@ -132,7 +118,9 @@ export function PokemonForm({
           console.error('Form submission error:', error)
         }
       } else {
-        const { error } = await tryCatch(createMutation.mutateAsync(submitData))
+        const { error } = await tryCatch(
+          createMutation(submitData as unknown as Partial<PokemonWithRelations>)
+        )
         if (!error) {
           onBack()
         } else {
@@ -142,8 +130,8 @@ export function PokemonForm({
     },
   })
 
-  const isLoading = createMutation.isPending || updateMutation.isPending
-  const error = createMutation.error || updateMutation.error
+  const isLoading = isCreating || isUpdating
+  const error = createError || updateError
 
   return (
     <div className="mx-auto max-w-2xl rounded-lg bg-black/70 p-8">
@@ -268,7 +256,6 @@ export function PokemonForm({
             )}
           </form.Field>
 
-          {/* Type */}
           <form.Field name="types">
             {(field) => (
               <div>
@@ -293,7 +280,6 @@ export function PokemonForm({
             )}
           </form.Field>
 
-          {/* Description */}
           <form.Field name="description">
             {(field) => (
               <div>
@@ -309,7 +295,6 @@ export function PokemonForm({
             )}
           </form.Field>
 
-          {/* Height and Weight Row */}
           <div className="grid grid-cols-2 gap-3">
             <form.Field name="heightCm">
               {(field) => (
@@ -367,7 +352,6 @@ export function PokemonForm({
             </form.Field>
           </div>
 
-          {/* Abilities */}
           <form.Field name="abilities">
             {(field) => (
               <div>
@@ -392,7 +376,6 @@ export function PokemonForm({
             )}
           </form.Field>
 
-          {/* Egg Groups */}
           <form.Field name="eggGroups">
             {(field) => (
               <div>
@@ -417,7 +400,6 @@ export function PokemonForm({
             )}
           </form.Field>
 
-          {/* Evolution Description */}
           <form.Field name="evolutionDescription">
             {(field) => (
               <div>
@@ -433,7 +415,6 @@ export function PokemonForm({
             )}
           </form.Field>
 
-          {/* Evolution Photo */}
           <form.Field name="evolutionPhotoUrl">
             {(field) => (
               <div>
@@ -507,7 +488,6 @@ export function PokemonForm({
             )}
           </form.Field>
 
-          {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-6">
             <Button
               type="button"

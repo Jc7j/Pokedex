@@ -2,11 +2,7 @@ import type { Pokemon } from '@prisma/client'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { queryClient } from '~/pages/_app'
 
-type PokemonWithTypes = Pokemon & {
-  types: Array<{ type: { name: string } }>
-}
-
-type PokemonWithRelations = Pokemon & {
+export type PokemonWithRelations = Pokemon & {
   types: Array<{ type: { name: string } }>
   abilities: Array<{ ability: { name: string } }>
   eggGroups: Array<{ eggGroup: { name: string } }>
@@ -30,28 +26,16 @@ type PokemonWithRelations = Pokemon & {
   }>
 }
 
-type CreatePokemonData = {
-  name: string
-  pokedexNumber: string
-  photoUrl?: string | null
-  description?: string
-  heightCm?: string
-  weightKg?: string
-  genderFemaleRatio?: string
-  genderMaleRatio?: string
-  types?: string[]
-  abilities?: string[]
-  eggGroups?: string[]
-}
-
-type UpdatePokemonData = CreatePokemonData & {
-  id: number
+export interface PokemonFormProps {
+  onBack: () => void
+  pokemon?: PokemonWithRelations | null
+  mode?: 'create' | 'edit'
 }
 
 export function getMany() {
   return useQuery({
     queryKey: ['pokemon'],
-    queryFn: async (): Promise<PokemonWithTypes[]> => {
+    queryFn: async (): Promise<PokemonWithRelations[]> => {
       const response = await fetch('/api/pokemon')
       if (!response.ok) {
         throw new Error('Failed to fetch pokemon')
@@ -78,14 +62,35 @@ export function getOne(id: number | null) {
 export function create() {
   return useMutation({
     mutationFn: async (
-      data: CreatePokemonData
+      data: Partial<PokemonWithRelations>
     ): Promise<{ success: boolean; message: string }> => {
+      // Transform relation data to simple arrays for API
+      const apiData = {
+        name: data.name,
+        pokedexNumber: data.pokedexNumber,
+        photoUrl: data.photoUrl,
+        description: data.description,
+        heightCm: data.heightCm,
+        weightKg: data.weightKg,
+        genderFemaleRatio: data.genderFemaleRatio,
+        genderMaleRatio: data.genderMaleRatio,
+        types: data.types?.map((t) =>
+          typeof t === 'string' ? t : t.type.name
+        ),
+        abilities: data.abilities?.map((a) =>
+          typeof a === 'string' ? a : a.ability.name
+        ),
+        eggGroups: data.eggGroups?.map((g) =>
+          typeof g === 'string' ? g : g.eggGroup.name
+        ),
+      }
+
       const response = await fetch('/api/pokemon', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(apiData),
       })
 
       if (!response.ok) {
@@ -103,15 +108,37 @@ export function create() {
 export function update() {
   return useMutation({
     mutationFn: async (
-      data: UpdatePokemonData
+      data: Partial<PokemonWithRelations> & { id: number }
     ): Promise<{ success: boolean; message: string }> => {
       const { id, ...updateData } = data
+
+      // Transform relation data to simple arrays for API
+      const apiData = {
+        name: updateData.name,
+        pokedexNumber: updateData.pokedexNumber,
+        photoUrl: updateData.photoUrl,
+        description: updateData.description,
+        heightCm: updateData.heightCm,
+        weightKg: updateData.weightKg,
+        genderFemaleRatio: updateData.genderFemaleRatio,
+        genderMaleRatio: updateData.genderMaleRatio,
+        types: updateData.types?.map((t) =>
+          typeof t === 'string' ? t : t.type.name
+        ),
+        abilities: updateData.abilities?.map((a) =>
+          typeof a === 'string' ? a : a.ability.name
+        ),
+        eggGroups: updateData.eggGroups?.map((g) =>
+          typeof g === 'string' ? g : g.eggGroup.name
+        ),
+      }
+
       const response = await fetch(`/api/pokemon/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updateData),
+        body: JSON.stringify(apiData),
       })
 
       if (!response.ok) {

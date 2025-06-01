@@ -14,7 +14,7 @@ import {
 } from '~/components/ui'
 import { getMany } from '~/lib/pokemon-queries'
 
-export default function Pokedex() {
+export default function Pokemon() {
   const [searchTerm, setSearchTerm] = useQueryState('search', {
     defaultValue: '',
     parse: (value) => value || '',

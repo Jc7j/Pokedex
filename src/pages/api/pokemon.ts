@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { tryCatch } from '~/lib/try-catch'
-
-const prisma = new PrismaClient()
+import { db } from '~/server/db'
 
 export default async function handler(
   req: NextApiRequest,
@@ -13,7 +11,7 @@ export default async function handler(
   switch (method) {
     case 'GET': {
       const { data, error } = await tryCatch(
-        prisma.pokemon.findMany({
+        db.pokemon.findMany({
           include: {
             types: {
               include: {
@@ -58,7 +56,7 @@ export default async function handler(
       }
 
       const { error } = await tryCatch(
-        prisma.pokemon.create({
+        db.pokemon.create({
           data: {
             name,
             pokedexNumber: Number(pokedexNumber),

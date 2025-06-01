@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { tryCatch } from '~/lib/try-catch'
-
-const prisma = new PrismaClient()
+import { db } from '~/server/db'
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,7 +18,7 @@ export default async function handler(
       }
 
       const { data: pokemon, error } = await tryCatch(
-        prisma.pokemon.findUnique({
+        db.pokemon.findUnique({
           where: {
             id: pokemonId,
           },
@@ -102,7 +100,7 @@ export default async function handler(
       } = req.body
 
       const { error } = await tryCatch(
-        prisma.pokemon.update({
+        db.pokemon.update({
           where: {
             id: pokemonId,
           },
@@ -180,7 +178,7 @@ export default async function handler(
       }
 
       const { error } = await tryCatch(
-        prisma.$transaction(async (tx) => {
+        db.$transaction(async (tx) => {
           // Delete all related records first
           await tx.pokemonType.deleteMany({
             where: { pokemonId },

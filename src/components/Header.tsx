@@ -5,6 +5,8 @@ import { useRouter } from 'next/router'
 export function Header() {
   const router = useRouter()
 
+  const isPokemonActive = router.pathname.startsWith('/pokemon')
+
   return (
     <header className="flex flex-col items-center bg-black/70 py-6">
       <Image
@@ -27,9 +29,9 @@ export function Header() {
           Home
         </Link>
         <Link
-          href="/pokedex"
+          href="/pokemon"
           className={`relative font-bold text-md text-white transition-colors hover:text-yellow-300 ${
-            router.pathname === '/pokedex'
+            isPokemonActive
               ? 'after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-white after:content-[""] hover:after:bg-yellow-300'
               : ''
           }`}

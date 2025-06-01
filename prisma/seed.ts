@@ -1,93 +1,91 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '~/server/db'
 
 async function main() {
-  const grassType = await prisma.type.upsert({
+  const grassType = await db.type.upsert({
     where: { name: 'grass' },
     update: {},
     create: { name: 'grass' },
   })
 
-  const poisonType = await prisma.type.upsert({
+  const poisonType = await db.type.upsert({
     where: { name: 'poison' },
     update: {},
     create: { name: 'poison' },
   })
 
-  const electricType = await prisma.type.upsert({
+  const electricType = await db.type.upsert({
     where: { name: 'electric' },
     update: {},
     create: { name: 'electric' },
   })
 
-  const fireType = await prisma.type.upsert({
+  const fireType = await db.type.upsert({
     where: { name: 'fire' },
     update: {},
     create: { name: 'fire' },
   })
 
-  const waterType = await prisma.type.upsert({
+  const waterType = await db.type.upsert({
     where: { name: 'water' },
     update: {},
     create: { name: 'water' },
   })
 
-  const overgrow = await prisma.ability.upsert({
+  const overgrow = await db.ability.upsert({
     where: { name: 'overgrow' },
     update: {},
     create: { name: 'overgrow' },
   })
 
-  const chlorophyll = await prisma.ability.upsert({
+  const chlorophyll = await db.ability.upsert({
     where: { name: 'chlorophyll' },
     update: {},
     create: { name: 'chlorophyll' },
   })
 
-  const staticAbility = await prisma.ability.upsert({
+  const staticAbility = await db.ability.upsert({
     where: { name: 'static' },
     update: {},
     create: { name: 'static' },
   })
 
-  const blaze = await prisma.ability.upsert({
+  const blaze = await db.ability.upsert({
     where: { name: 'blaze' },
     update: {},
     create: { name: 'blaze' },
   })
 
-  const torrent = await prisma.ability.upsert({
+  const torrent = await db.ability.upsert({
     where: { name: 'torrent' },
     update: {},
     create: { name: 'torrent' },
   })
 
-  const monster = await prisma.eggGroup.upsert({
+  const monster = await db.eggGroup.upsert({
     where: { name: 'monster' },
     update: {},
     create: { name: 'monster' },
   })
 
-  const grassEggGroup = await prisma.eggGroup.upsert({
+  const grassEggGroup = await db.eggGroup.upsert({
     where: { name: 'grass' },
     update: {},
     create: { name: 'grass' },
   })
 
-  const field = await prisma.eggGroup.upsert({
+  const field = await db.eggGroup.upsert({
     where: { name: 'field' },
     update: {},
     create: { name: 'field' },
   })
 
-  const fairy = await prisma.eggGroup.upsert({
+  const fairy = await db.eggGroup.upsert({
     where: { name: 'fairy' },
     update: {},
     create: { name: 'fairy' },
   })
 
-  const bulbasaur = await prisma.pokemon.upsert({
+  const bulbasaur = await db.pokemon.upsert({
     where: { pokedexNumber: 1 },
     update: {},
     create: {
@@ -121,7 +119,7 @@ async function main() {
     },
   })
 
-  const ivysaur = await prisma.pokemon.upsert({
+  const ivysaur = await db.pokemon.upsert({
     where: { pokedexNumber: 2 },
     update: {},
     create: {
@@ -155,7 +153,7 @@ async function main() {
     },
   })
 
-  const pikachu = await prisma.pokemon.upsert({
+  const pikachu = await db.pokemon.upsert({
     where: { pokedexNumber: 25 },
     update: {},
     create: {
@@ -183,7 +181,7 @@ async function main() {
     },
   })
 
-  const raichu = await prisma.pokemon.upsert({
+  const raichu = await db.pokemon.upsert({
     where: { pokedexNumber: 26 },
     update: {},
     create: {
@@ -211,7 +209,7 @@ async function main() {
     },
   })
 
-  await prisma.evolution.upsert({
+  await db.evolution.upsert({
     where: { id: 1 },
     update: {},
     create: {
@@ -221,7 +219,7 @@ async function main() {
     },
   })
 
-  await prisma.evolution.upsert({
+  await db.evolution.upsert({
     where: { id: 2 },
     update: {},
     create: {
@@ -236,10 +234,10 @@ async function main() {
 
 main()
   .then(async () => {
-    await prisma.$disconnect()
+    await db.$disconnect()
   })
   .catch(async (e) => {
     console.error('❌ Seed failed:', e)
-    await prisma.$disconnect()
+    await db.$disconnect()
     process.exit(1)
   })
