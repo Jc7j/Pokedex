@@ -15,20 +15,20 @@ export function PokeDevice({ pokemonData }: { pokemonData: Pokemon }) {
           <div className="h-full space-y-1 text-black text-xs">
             <div className="flex items-center justify-between border-gray-300 border-b pb-1">
               <h2 className="font-bold text-base">{pokemonData.name}</h2>
-              <span className="text-sm">N° {pokemonData.pokedexNumber}</span>
+              <p className="text-sm">N° {pokemonData.pokedexNumber}</p>
             </div>
-            <div className="font-semibold text-sm">Electric</div>
-            <div className="py-1 text-xs leading-tight">
+            <p className="font-semibold text-sm">Electric</p>
+            <p className="py-1 text-xs leading-tight">
               {pokemonData.description}
-            </div>
+            </p>
             <div className="absolute right-3 bottom-3 left-3 flex justify-between text-xs">
               <div>
-                <div className="font-semibold">Height</div>
-                <div>{pokemonData.heightCm}</div>
+                <p className="font-semibold">Height</p>
+                <p>{pokemonData.heightCm}</p>
               </div>
               <div>
-                <div className="font-semibold">Weight</div>
-                <div>{pokemonData.weightKg}</div>
+                <p className="font-semibold">Weight</p>
+                <p>{pokemonData.weightKg}</p>
               </div>
             </div>
           </div>
@@ -38,9 +38,9 @@ export function PokeDevice({ pokemonData }: { pokemonData: Pokemon }) {
       <div className="absolute top-[23%] right-[7%] h-[42%] w-[36%]">
         <div className="flex h-full items-center justify-center rounded-lg border border-gray-300 bg-white p-4">
           <div className="text-center">
-            <div className="mx-auto flex h-32 w-32 items-center justify-center text-6xl">
+            <p className="mx-auto flex h-32 w-32 items-center justify-center text-6xl">
               ⚡
-            </div>
+            </p>
           </div>
         </div>
       </div>

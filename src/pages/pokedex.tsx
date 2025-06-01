@@ -2,9 +2,9 @@ import type { Pokemon } from '@prisma/client'
 import { ListFilter, Plus, Search } from 'lucide-react'
 import { useQueryState } from 'nuqs'
 import { useState } from 'react'
-import { CreatePokemon } from '~/components/CreatePokemon'
 import PokemonCard from '~/components/PokemonCard'
 import { PokemonDetail } from '~/components/PokemonDetail'
+import { PokemonForm } from '~/components/PokemonForm'
 import {
   Button,
   Input,
@@ -86,6 +86,13 @@ const pokemonList: Pokemon[] = [
   },
 ]
 
+const pokemonTypes: Record<number, string[]> = {
+  1: ['grass'],
+  2: ['grass'],
+  25: ['electric'],
+  26: ['electric'],
+}
+
 export default function Pokedex() {
   const [selectedPokemonId, setSelectedPokemonId] = useQueryState('pokemon', {
     defaultValue: null,
@@ -99,32 +106,49 @@ export default function Pokedex() {
     serialize: (value) => value,
   })
 
+  const [typeFilter, setTypeFilter] = useQueryState('type', {
+    defaultValue: 'all',
+    parse: (value) => value || 'all',
+    serialize: (value) => (value === 'all' ? '' : value),
+  })
+
+  const [isEditing, setIsEditing] = useQueryState('edit', {
+    defaultValue: false,
+    parse: (value) => value === 'true',
+    serialize: (value) => (value ? 'true' : ''),
+  })
+
   const [showCreateForm, setShowCreateForm] = useState(false)
 
   const selectedPokemon = selectedPokemonId
     ? pokemonList.find((p) => p.id === selectedPokemonId)
     : null
 
-  const filteredPokemon = pokemonList.filter(
-    (pokemon) =>
+  const filteredPokemon = pokemonList.filter((pokemon) => {
+    const matchesSearch =
       pokemon.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pokemon.pokedexNumber.toString().includes(searchTerm)
-  )
 
-  const handlePokemonClick = (pokemon: Pokemon) => {
-    setSelectedPokemonId(pokemon.id)
-  }
+    const matchesType =
+      typeFilter === 'all' ||
+      pokemonTypes[pokemon.id]?.includes(typeFilter.toLowerCase())
 
-  const handleBackToList = () => {
+    return matchesSearch && matchesType
+  })
+
+  function handleBackToList() {
     setSelectedPokemonId(null)
+    setIsEditing(false)
   }
 
-  const handleCreateNew = () => {
-    setShowCreateForm(true)
-  }
-
-  const handleBackFromCreate = () => {
-    setShowCreateForm(false)
+  if (selectedPokemon && isEditing) {
+    return (
+      <PokemonForm
+        pokemon={selectedPokemon}
+        mode="edit"
+        onBack={() => setIsEditing(false)}
+      />
+    )
   }
 
   if (selectedPokemon) {
@@ -147,20 +171,23 @@ export default function Pokedex() {
     }
 
     return (
-      <PokemonDetail pokemon={pokemonWithRelations} onBack={handleBackToList} />
+      <PokemonDetail
+        pokemon={pokemonWithRelations}
+        onBack={handleBackToList}
+        onEdit={() => setIsEditing(true)}
+      />
     )
   }
 
-  // Show create form
   if (showCreateForm) {
-    return <CreatePokemon onBack={handleBackFromCreate} />
+    return <PokemonForm onBack={() => setShowCreateForm(false)} />
   }
 
   return (
     <div className="overflow-hidden rounded-lg bg-black/70">
       <div className="container mx-auto overflow-y-auto px-6 py-8">
         {/* Page Title */}
-        <div className="mb-8">
+        <div className="mb-4">
           <h1 className="mb-2 font-bold text-4xl text-white">Pokedex</h1>
         </div>
 
@@ -179,14 +206,11 @@ export default function Pokedex() {
               />
             </div>
 
-            {/* Type Filter */}
             <div className="flex items-center">
-              <Select>
-                <SelectTrigger className="border-gray-600 bg-gray-800/80 text-white">
-                  <div className="flex items-center gap-2">
-                    <ListFilter className="h-4 w-4 text-white" />
-                    <SelectValue placeholder="Type" />
-                  </div>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="flex items-center gap-2 border-gray-600 bg-gray-800/80 text-white">
+                  <ListFilter className="h-4 w-4 text-white" />
+                  <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent className="border-gray-600 bg-gray-800">
                   <SelectItem
@@ -231,7 +255,7 @@ export default function Pokedex() {
           </div>
 
           {/* Create New Button */}
-          <Button onClick={handleCreateNew}>
+          <Button onClick={() => setShowCreateForm(true)}>
             <div className="mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-white">
               <Plus className="h-3 w-3 text-black" />
             </div>
@@ -239,13 +263,12 @@ export default function Pokedex() {
           </Button>
         </div>
 
-        {/* Pokemon Grid */}
         <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredPokemon.map((pokemon) => (
             <PokemonCard
               key={pokemon.id}
               pokemon={pokemon}
-              onClick={() => handlePokemonClick(pokemon)}
+              onClick={() => setSelectedPokemonId(pokemon.id)}
             />
           ))}
         </div>

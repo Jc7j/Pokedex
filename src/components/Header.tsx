@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 
@@ -6,13 +7,13 @@ export function Header() {
 
   return (
     <header className="flex flex-col items-center bg-black/70 py-6">
-      <div className="mb-2.5">
-        <img
-          src="/PokemonLogo.png"
-          alt="Pokemon Logo"
-          className="h-10 w-auto"
-        />
-      </div>
+      <Image
+        src="/PokemonLogo.png"
+        alt="Pokemon Logo"
+        width={120}
+        height={40}
+        className="mb-2.5 h-10 w-auto"
+      />
 
       <nav className="flex items-center gap-[50px]">
         <Link

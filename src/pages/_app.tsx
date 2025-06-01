@@ -1,5 +1,6 @@
 import type { AppType } from 'next/dist/shared/lib/utils'
 import { Inter } from 'next/font/google'
+import Image from 'next/image'
 import { NuqsAdapter } from 'nuqs/adapters/next/pages'
 import { Header } from '~/components/Header'
 
@@ -13,11 +14,18 @@ const inter = Inter({
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <NuqsAdapter>
-      <main
-        className={`min-h-screen bg-center bg-cover bg-no-repeat ${inter.className}`}
-        style={{ backgroundImage: 'url(/Wallpaper.jpg)' }}
-      >
-        <div className="min-h-screen">
+      <main className={`relative min-h-screen ${inter.className}`}>
+        <Image
+          src="/Wallpaper.jpg"
+          alt="Pokemon wallpaper background"
+          fill
+          className="object-cover"
+          style={{ zIndex: -1 }}
+          priority
+          quality={75}
+        />
+
+        <div className="relative z-10 min-h-screen">
           <Header />
 
           <div className="mx-auto mt-10 max-w-[90%]">

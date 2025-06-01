@@ -1,11 +1,14 @@
+import type { Pokemon } from '@prisma/client'
 import { useForm } from '@tanstack/react-form'
 import { Button, Input, Label, Textarea } from '~/components/ui'
 
-interface CreatePokemonProps {
+interface PokemonFormProps {
   onBack: () => void
+  pokemon?: Pokemon | null
+  mode?: 'create' | 'edit'
 }
 
-type CreatePokemonFormData = {
+type PokemonFormData = {
   name: string
   pokedexNumber: string
   photoUrl: string | null
@@ -21,37 +24,41 @@ type CreatePokemonFormData = {
   evolutionPhotoUrl: string | null
 }
 
-export function CreatePokemon({ onBack }: CreatePokemonProps) {
+export function PokemonForm({
+  onBack,
+  pokemon,
+  mode = 'create',
+}: PokemonFormProps) {
+  const isEditMode = mode === 'edit' && pokemon
+
   const form = useForm({
     defaultValues: {
-      name: '',
-      pokedexNumber: '',
-      photoUrl: null,
-      description: '',
-      heightCm: '',
-      weightKg: '',
-      genderFemaleRatio: '',
-      genderMaleRatio: '',
+      name: pokemon?.name ?? '',
+      pokedexNumber: pokemon?.pokedexNumber.toString() ?? '',
+      photoUrl: pokemon?.photoUrl ?? null,
+      description: pokemon?.description ?? '',
+      heightCm: pokemon?.heightCm?.toString() ?? '',
+      weightKg: pokemon?.weightKg?.toString() ?? '',
+      genderFemaleRatio: pokemon?.genderFemaleRatio?.toString() ?? '',
+      genderMaleRatio: pokemon?.genderMaleRatio?.toString() ?? '',
       types: [],
       abilities: [],
       eggGroups: [],
       evolutionDescription: '',
       evolutionPhotoUrl: null,
-    } as CreatePokemonFormData,
+    } as PokemonFormData,
     onSubmit: async ({ value }) => {
       // Nothing happens on submit yet
-      console.log('Form submitted:', value)
+      console.log(`${mode} form submitted:`, value)
     },
   })
 
   return (
     <div className="mx-auto max-w-2xl rounded-lg bg-black/70 p-8">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="font-bold text-2xl text-white">Nuevo Pokemon</h1>
-      </div>
+      <h1 className="mb-6 font-bold text-2xl text-white">
+        {isEditMode ? `${pokemon.name}` : 'Nuevo Pokemon'}
+      </h1>
 
-      {/* Form */}
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -293,7 +300,7 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
             >
               Cancel
             </Button>
-            <Button type="submit">Save</Button>
+            <Button type="submit">{isEditMode ? 'Update' : 'Save'}</Button>
           </div>
         </div>
       </form>
